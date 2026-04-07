@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Editor & IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# WoW SavedVariables (generated at runtime, not source)
+*.lua.bak
+
+# Packager output
+*.zip
+*.tar.gz
+release/
+dist/
+
+# Curse/Wago packager
+.pkgmeta

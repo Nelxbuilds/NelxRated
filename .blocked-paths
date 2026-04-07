@@ -1,0 +1,8 @@
+# Paths blocked from being read by Claude.
+# One entry per line. Relative paths are resolved from the project root.
+# Lines starting with # are comments.
+
+# Examples:
+# secrets/
+# .env
+# ~/.ssh

@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Glob|Grep|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/block-paths.sh",
+            "statusMessage": "Checking blocked paths..."
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.wowhead.com)",
+      "WebFetch(domain:www.wow-professions.com)",
+      "WebSearch",
+      "WebFetch(domain:warcraft.wiki.gg)",
+      "WebFetch(domain:wowpedia.fandom.com)",
+      "WebFetch(domain:us.forums.blizzard.com)",
+      "WebFetch(domain:wowhead.com)"
+    ]
+  },
+  "showThinkingSummaries": true
+}
