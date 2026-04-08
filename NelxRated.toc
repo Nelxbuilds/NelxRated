@@ -4,3 +4,5 @@
 ## Author: Nelx
 ## Version: 0.1.0
 ## SavedVariables: NelxRatedDB
+
+Core.lua

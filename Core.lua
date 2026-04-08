@@ -1,0 +1,148 @@
+local addonName, NXR = ...
+
+-- ============================================================================
+-- Bracket constants
+-- ============================================================================
+
+NXR.BRACKET_2V2          = 0
+NXR.BRACKET_3V3          = 1
+NXR.BRACKET_BLITZ        = 4
+NXR.BRACKET_SOLO_SHUFFLE = 7
+
+NXR.BRACKET_NAMES = {
+    [0] = "2v2",
+    [1] = "3v3",
+    [4] = "Blitz BG",
+    [7] = "Solo Shuffle",
+}
+
+NXR.TRACKED_BRACKETS = { 0, 1, 4, 7 }
+
+-- ============================================================================
+-- SavedVariables initialization (only after ADDON_LOADED)
+-- ============================================================================
+
+local SETTINGS_DEFAULTS = {
+    accountName          = "",
+    opacityInArena       = 1.0,
+    opacityOutOfArena    = 1.0,
+    showOverlayBackground = true,
+}
+
+local function InitDB()
+    NelxRatedDB = NelxRatedDB or {}
+
+    NelxRatedDB.settings        = NelxRatedDB.settings or {}
+    NelxRatedDB.characters      = NelxRatedDB.characters or {}
+    NelxRatedDB.challenges      = NelxRatedDB.challenges or {}
+    NelxRatedDB.overlayPosition = NelxRatedDB.overlayPosition or {}
+    NelxRatedDB.schemaVersion   = NelxRatedDB.schemaVersion or 1
+
+    for k, v in pairs(SETTINGS_DEFAULTS) do
+        if NelxRatedDB.settings[k] == nil then
+            NelxRatedDB.settings[k] = v
+        end
+    end
+end
+
+-- ============================================================================
+-- Character information capture
+-- ============================================================================
+
+function NXR.UpdateCharacterInfo()
+    local name, realm = UnitName("player")
+    realm = (realm and realm ~= "") and realm or GetRealmName()
+    if not name or not realm then return end
+
+    local key = name .. "-" .. realm
+    NXR.currentCharKey = key
+
+    local classDisplayName, classFileName = UnitClass("player")
+
+    local specIndex = GetSpecialization()
+    local specID, specName
+    if specIndex then
+        specID, specName = GetSpecializationInfo(specIndex)
+    end
+
+    local char = NelxRatedDB.characters[key] or { brackets = {} }
+    char.name             = name
+    char.realm            = realm
+    char.classFileName    = classFileName
+    char.classDisplayName = classDisplayName
+    char.specID           = specID
+    char.specName         = specName
+    char.account          = NelxRatedDB.settings.accountName
+
+    NelxRatedDB.characters[key] = char
+end
+
+-- ============================================================================
+-- Rating & MMR capture
+-- ============================================================================
+
+function NXR.SaveBracketData(bracketIndex, rating, mmr)
+    local key = NXR.currentCharKey
+    if not key then return end
+
+    local char = NelxRatedDB.characters[key]
+    if not char then return end
+
+    char.brackets[bracketIndex] = {
+        rating    = rating,
+        mmr       = mmr,
+        updatedAt = time(),
+    }
+end
+
+local function CapturePvPStats()
+    if not C_PvP or not C_PvP.GetRatedBracketInfo then return end
+
+    NXR.UpdateCharacterInfo()
+
+    for _, bracketIndex in ipairs(NXR.TRACKED_BRACKETS) do
+        local info = C_PvP.GetRatedBracketInfo(bracketIndex)
+        if info and info.seasonPlayed and info.seasonPlayed > 0 then
+            NXR.SaveBracketData(bracketIndex, info.rating, info.seasonMmr or 0)
+        end
+    end
+
+    if NXR.RefreshOverlay then
+        NXR.RefreshOverlay()
+    end
+end
+
+-- ============================================================================
+-- Event handling
+-- ============================================================================
+
+local pvpStatsTimer = nil
+
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+eventFrame:RegisterEvent("PVP_RATED_STATS_UPDATE")
+
+eventFrame:SetScript("OnEvent", function(self, event, ...)
+    if event == "ADDON_LOADED" then
+        local loadedAddon = ...
+        if loadedAddon == addonName then
+            InitDB()
+            self:UnregisterEvent("ADDON_LOADED")
+        end
+
+    elseif event == "PLAYER_ENTERING_WORLD" then
+        NXR.UpdateCharacterInfo()
+
+    elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+        NXR.UpdateCharacterInfo()
+
+    elseif event == "PVP_RATED_STATS_UPDATE" then
+        if pvpStatsTimer then return end
+        pvpStatsTimer = C_Timer.After(0.5, function()
+            pvpStatsTimer = nil
+            CapturePvPStats()
+        end)
+    end
+end)
