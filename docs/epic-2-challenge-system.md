@@ -32,8 +32,12 @@ Named rating challenges with multi-spec selection, optional class-level selectio
 
 A character matches a spec row in a challenge when:
 
-1. The character's `specID` is in the challenge's `specs` table
-2. The character has a rating > 0 in **any** of the challenge's selected `brackets`
+1. The character's class includes that spec (i.e., the spec belongs to the character's class)
+2. The character has a rating > 0 in **any** of the challenge's selected `brackets`:
+   - **Per-character brackets** (2v2, 3v3): check `character.brackets[bracketIndex]` — same rating regardless of spec
+   - **Per-spec brackets** (Solo Shuffle, Blitz): check `character.specBrackets[specID][bracketIndex]` — rating is specific to each spec
+
+Use `NXR.GetRating(charKey, bracketIndex, specID)` to look up the correct value for any bracket type.
 
 When multiple characters match the same spec, the one with the **highest rating** (across any selected bracket) is displayed in the overlay.
 

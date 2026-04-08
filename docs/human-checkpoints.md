@@ -8,16 +8,16 @@ Tick each box after in-game testing. The verify-story agent handles static code 
 
 ### After Story 1-1 (Addon Bootstrap & SavedVariables)
 
-- [ ] `/reload` on a fresh install — no Lua errors in chat.
-- [ ] `/dump NelxRatedDB` — confirm structure has `settings`, `characters`, `challenges`, `overlayPosition`, `schemaVersion = 1`.
+- [x] `/reload` on a fresh install — no Lua errors in chat.
+- [x] `/dump NelxRatedDB` — confirm structure has `settings`, `characters`, `challenges`, `overlayPosition`, `schemaVersion = 1`.
 - [ ] Bracket constants present: `/dump NXR.BRACKET_2V2` → `0`, `/dump NXR.BRACKET_SOLO_SHUFFLE` → `7`.
 
 ### After Story 1-2 (Character Information Capture)
 
-- [ ] Log in on your main character. `/dump NelxRatedDB.characters` — confirm `name`, `realm`, `class`, `spec`, `specID` are correct.
+- [x] Log in on your main character. `/dump NelxRatedDB.characters` — confirm `name`, `realm`, `class`, `spec`, `specID` are correct.
 - [ ] Log in on a character on your **home realm** (where `UnitName()` returns nil for realm). Confirm realm is still stored correctly via `GetRealmName()` fallback.
-- [ ] Log in on the same character twice (reload UI). Confirm only one record exists — no duplicates.
-- [ ] Switch specs in-game. `/dump NelxRatedDB.characters` — confirm `specID` and `specName` updated, bracket data preserved.
+- [x] Log in on the same character twice (reload UI). Confirm only one record exists — no duplicates.
+- [ ] Switch specs in-game. `/dump NelxRatedDB.characters` — confirm `specID` and `specName` updated. `brackets` (2v2 & 3v3) preserved. `specBrackets` contains separate entries per specID — old spec's Solo Shuffle & Blitz ratings remain under their specID, new spec's data appears after the next rated game.
 
 ### After Story 1-3 (Rating & MMR Capture) — CRITICAL GATE
 
@@ -42,23 +42,23 @@ Without this working, nothing else matters.
 
 ### After Story 2-2 (Challenge List UI)
 
-- [ ] Open `/nxr` → Challenges tab. Create a challenge — it appears in the list immediately.
-- [ ] `/reload` — challenge is still there.
-- [ ] Edit the goal rating. Confirm the new value persists after reload.
+- [x] Open `/nxr` → Challenges tab. Create a challenge — it appears in the list immediately.
+- [x] `/reload` — challenge is still there.
+- [x] Edit the goal rating. Confirm the new value persists after reload.
 - [ ] Delete the challenge. Confirm it disappears from the list.
-- [ ] With no challenges, the empty-state message is shown (not a blank panel).
-- [ ] Set Active button highlights the active challenge visually.
+- [x] With no challenges, the empty-state message is shown (not a blank panel).
+- [x] Set Active button highlights the active challenge visually.
 
 ### After Story 2-3 (Challenge Create/Edit Form)
 
-- [ ] Open the create form. All five sections present: name input, bracket toggles, goal rating, spec picker, class picker.
-- [ ] Select a class — all specs of that class become checked in the spec picker.
+- [x] Open the create form. All five sections present: name input, bracket toggles, goal rating, spec picker, class picker.
+- [x] Select a class — all specs of that class become checked in the spec picker.
 - [ ] Deselect one spec from a class-selected challenge — that spec becomes unchecked while others remain.
 - [ ] Try to save with no name — inline error shown, save blocked.
 - [ ] Try to save with no specs selected — inline error shown.
-- [ ] Try to save with no bracket selected — inline error shown.
-- [ ] Save a valid challenge — list refreshes, overlay updates if this challenge is active.
-- [ ] Edit an existing challenge — form pre-populates with existing data.
+- [x] Try to save with no bracket selected — inline error shown.
+- [x] Save a valid challenge — list refreshes, overlay updates if this challenge is active.
+- [x] Edit an existing challenge — form pre-populates with existing data.
 
 ---
 

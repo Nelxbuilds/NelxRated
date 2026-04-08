@@ -18,6 +18,11 @@ NXR.BRACKET_NAMES = {
 
 NXR.TRACKED_BRACKETS = { 0, 1, 4, 7 }
 
+NXR.PER_SPEC_BRACKETS = {
+    [4] = true,   -- Blitz BG (per-spec rating)
+    [7] = true,   -- Solo Shuffle (per-spec rating)
+}
+
 -- ============================================================================
 -- Color palette
 -- ============================================================================
@@ -76,7 +81,7 @@ function NXR.UpdateCharacterInfo()
         specID, specName = GetSpecializationInfo(specIndex)
     end
 
-    local char = NelxRatedDB.characters[key] or { brackets = {} }
+    local char = NelxRatedDB.characters[key] or { brackets = {}, specBrackets = {} }
     char.name             = name
     char.realm            = realm
     char.classFileName    = classFileName
@@ -99,11 +104,33 @@ function NXR.SaveBracketData(bracketIndex, rating, mmr)
     local char = NelxRatedDB.characters[key]
     if not char then return end
 
-    char.brackets[bracketIndex] = {
+    local data = {
         rating    = rating,
         mmr       = mmr,
         updatedAt = time(),
     }
+
+    if NXR.PER_SPEC_BRACKETS[bracketIndex] then
+        local specID = char.specID
+        if not specID then return end
+        char.specBrackets = char.specBrackets or {}
+        char.specBrackets[specID] = char.specBrackets[specID] or {}
+        char.specBrackets[specID][bracketIndex] = data
+    else
+        char.brackets[bracketIndex] = data
+    end
+end
+
+function NXR.GetRating(charKey, bracketIndex, specID)
+    local char = NelxRatedDB.characters[charKey]
+    if not char then return nil end
+
+    if NXR.PER_SPEC_BRACKETS[bracketIndex] then
+        local sb = char.specBrackets and char.specBrackets[specID]
+        return sb and sb[bracketIndex]
+    else
+        return char.brackets and char.brackets[bracketIndex]
+    end
 end
 
 local function CapturePvPStats()

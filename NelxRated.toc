@@ -1,4 +1,4 @@
-## Interface: 120100
+## Interface: 120000
 ## Title: NelxRated
 ## Notes: PvP rating challenge tracker for Solo Shuffle, 2v2, 3v3 and Blitz Battleground
 ## Author: Nelx
