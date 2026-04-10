@@ -203,12 +203,20 @@ local function CreateRow(parent, index)
         if not self.tooltipData then return end
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
 
-        -- Spec name as title
-        GameTooltip:AddLine(self.tooltipData.specName, 1, 1, 1)
+        -- Title line
+        GameTooltip:AddLine(self.tooltipData.title, 1, 1, 1)
 
         if self.tooltipData.characters and #self.tooltipData.characters > 0 then
             for _, info in ipairs(self.tooltipData.characters) do
-                local line = string.format("%s  %d  (%s)", info.charKey, info.rating, info.bracketName)
+                local line
+                if self.tooltipData.classMode then
+                    -- Class challenge: show spec name alongside character
+                    line = string.format("%s  %s  %d  (%s)",
+                        info.charKey, info.specName, info.rating, info.bracketName)
+                else
+                    line = string.format("%s  %d  (%s)",
+                        info.charKey, info.rating, info.bracketName)
+                end
                 GameTooltip:AddLine(line, 0.8, 0.8, 0.8)
             end
 
@@ -221,7 +229,10 @@ local function CreateRow(parent, index)
                 GameTooltip:AddLine(pctStr, color[1], color[2], color[3])
             end
         else
-            GameTooltip:AddLine("No character tracked for this spec", 0.5, 0.5, 0.5)
+            local noDataMsg = self.tooltipData.classMode
+                and "No character tracked for this class"
+                or "No character tracked for this spec"
+            GameTooltip:AddLine(noDataMsg, 0.5, 0.5, 0.5)
         end
 
         GameTooltip:Show()
@@ -242,16 +253,32 @@ local function GetRow(index)
 end
 
 -- ============================================================================
+-- Class icon helper
+-- ============================================================================
+
+local function SetClassIcon(tex, classFileName)
+    local ok = pcall(function()
+        tex:SetAtlas("classicon-" .. classFileName:lower())
+    end)
+    if not ok then
+        tex:SetTexture("Interface\\GLUES\\CHARACTERCREATE\\UI-CharacterCreate-Classes")
+        if CLASS_ICON_TCOORDS and CLASS_ICON_TCOORDS[classFileName] then
+            tex:SetTexCoord(unpack(CLASS_ICON_TCOORDS[classFileName]))
+        end
+    end
+end
+
+-- ============================================================================
 -- Character matching logic (Story 4-2)
 -- ============================================================================
 
-local function FindMatchingCharacters(specID, challenge)
+-- Find characters matching a single specID with rating in challenge brackets
+local function FindMatchingCharactersForSpec(specID, challenge)
     local matches = {}
     if not NelxRatedDB or not NelxRatedDB.characters then return matches end
 
     for charKey, char in pairs(NelxRatedDB.characters) do
         if char.specID == specID then
-            -- Find best rating across challenge's selected brackets
             local bestRating = 0
             local bestBracket = nil
 
@@ -269,14 +296,94 @@ local function FindMatchingCharacters(specID, challenge)
                     rating      = bestRating,
                     bracketIdx  = bestBracket,
                     bracketName = NXR.BRACKET_NAMES[bestBracket] or "Unknown",
+                    specID      = specID,
+                    specName    = NXR.specData[specID] and NXR.specData[specID].specName or "",
                 })
             end
         end
     end
 
-    -- Sort by rating descending
     table.sort(matches, function(a, b) return a.rating > b.rating end)
     return matches
+end
+
+-- Find all characters of any spec belonging to a class, best rating across all specs & brackets
+local function FindMatchingCharactersForClass(classID, challenge)
+    local matches = {}
+    if not NelxRatedDB or not NelxRatedDB.characters then return matches end
+
+    local classInfo = NXR.classData[classID]
+    if not classInfo then return matches end
+
+    -- Collect all specIDs belonging to this class
+    local classSpecIDs = {}
+    for _, s in ipairs(classInfo.specs) do
+        classSpecIDs[s.specID] = true
+    end
+
+    for charKey, char in pairs(NelxRatedDB.characters) do
+        -- Check if this character's class matches (via specID -> classID lookup)
+        local charSpec = char.specID and NXR.specData[char.specID]
+        if charSpec and charSpec.classID == classID then
+            local bestRating = 0
+            local bestBracket = nil
+            local bestSpecID = nil
+
+            -- Check all specs this character might have data for
+            for specID in pairs(classSpecIDs) do
+                for bracketIdx in pairs(challenge.brackets) do
+                    local data = NXR.GetRating(charKey, bracketIdx, specID)
+                    if data and data.rating and data.rating > bestRating then
+                        bestRating = data.rating
+                        bestBracket = bracketIdx
+                        bestSpecID = specID
+                    end
+                end
+            end
+
+            if bestRating > 0 then
+                table.insert(matches, {
+                    charKey     = charKey,
+                    rating      = bestRating,
+                    bracketIdx  = bestBracket,
+                    bracketName = NXR.BRACKET_NAMES[bestBracket] or "Unknown",
+                    specID      = bestSpecID,
+                    specName    = NXR.specData[bestSpecID] and NXR.specData[bestSpecID].specName or "",
+                })
+            end
+        end
+    end
+
+    table.sort(matches, function(a, b) return a.rating > b.rating end)
+    return matches
+end
+
+-- ============================================================================
+-- Determine if this is a class challenge
+-- ============================================================================
+
+local function IsClassChallenge(challenge)
+    if not challenge.classes then return false end
+    for _ in pairs(challenge.classes) do return true end
+    return false
+end
+
+-- ============================================================================
+-- Collect sorted class IDs from challenge
+-- ============================================================================
+
+local function GetSortedClassIDs(challenge)
+    local classIDs = {}
+    for classID in pairs(challenge.classes) do
+        table.insert(classIDs, classID)
+    end
+    table.sort(classIDs, function(a, b)
+        local ca = NXR.classData[a]
+        local cb = NXR.classData[b]
+        if not ca or not cb then return a < b end
+        return ca.className < cb.className
+    end)
+    return classIDs
 end
 
 -- ============================================================================
@@ -288,7 +395,6 @@ local function GetSortedSpecIDs(challenge)
     for specID in pairs(challenge.specs) do
         table.insert(specIDs, specID)
     end
-    -- Sort by class name then spec name for consistent ordering
     table.sort(specIDs, function(a, b)
         local sa = NXR.specData[a]
         local sb = NXR.specData[b]
@@ -299,6 +405,34 @@ local function GetSortedSpecIDs(challenge)
         return sa.specName < sb.specName
     end)
     return specIDs
+end
+
+-- ============================================================================
+-- Refresh overlay (Story 4-2, 4-3, 4-4)
+-- ============================================================================
+
+-- ============================================================================
+-- Populate a single row with match data
+-- ============================================================================
+
+local function PopulateRow(row, bestMatch, challenge)
+    if bestMatch then
+        row.charName:SetText(bestMatch.charKey)
+        row.rating:SetText(tostring(bestMatch.rating))
+
+        local color, showCheck = GetProgressColor(bestMatch.rating, challenge.goalRating or 0)
+        row.rating:SetTextColor(color[1], color[2], color[3])
+        if showCheck then
+            row.checkmark:Show()
+        else
+            row.checkmark:Hide()
+        end
+    else
+        row.charName:SetText("")
+        row.rating:SetText("\226\128\148") -- em dash
+        row.rating:SetTextColor(0.5, 0.5, 0.5)
+        row.checkmark:Hide()
+    end
 end
 
 -- ============================================================================
@@ -327,87 +461,104 @@ function NXR.RefreshOverlay()
         return
     end
 
-    -- Collect spec IDs from the hash table
-    local specIDs = GetSortedSpecIDs(challenge)
-    if #specIDs == 0 then
-        overlayFrame:Hide()
-        return
-    end
-
-    overlayFrame:Show()
+    local classMode = IsClassChallenge(challenge)
 
     local maxNameWidth = 0
     local maxRatingWidth = 0
     local rowIndex = 0
 
-    for _, specID in ipairs(specIDs) do
-        rowIndex = rowIndex + 1
-        local row = GetRow(rowIndex)
-
-        -- Determine icon: class icon if class challenge, else spec icon
-        local specInfo = NXR.specData[specID]
-        local iconTexture
-        if specInfo then
-            local isClassChallenge = false
-            if challenge.classes then
-                for classID in pairs(challenge.classes) do
-                    if classID == specInfo.classID then
-                        isClassChallenge = true
-                        break
-                    end
-                end
-            end
-
-            if isClassChallenge then
-                iconTexture = specInfo.icon  -- use spec icon for clarity
-            else
-                iconTexture = specInfo.icon
-            end
+    if classMode then
+        -- ============================================================
+        -- CLASS CHALLENGE: one row per class
+        -- ============================================================
+        local classIDs = GetSortedClassIDs(challenge)
+        if #classIDs == 0 then
+            overlayFrame:Hide()
+            return
         end
 
-        row.icon:SetTexture(iconTexture or "Interface\\Icons\\INV_Misc_QuestionMark")
+        overlayFrame:Show()
 
-        -- Find matching characters
-        local matches = FindMatchingCharacters(specID, challenge)
-        local bestMatch = matches[1]
+        for _, classID in ipairs(classIDs) do
+            rowIndex = rowIndex + 1
+            local row = GetRow(rowIndex)
+            local classInfo = NXR.classData[classID]
 
-        if bestMatch then
-            row.charName:SetText(bestMatch.charKey)
-            row.rating:SetText(tostring(bestMatch.rating))
-
-            -- Apply progress color (Story 4-4)
-            local color, showCheck = GetProgressColor(bestMatch.rating, challenge.goalRating or 0)
-            row.rating:SetTextColor(color[1], color[2], color[3])
-            if showCheck then
-                row.checkmark:Show()
+            -- Class icon via atlas
+            if classInfo then
+                SetClassIcon(row.icon, classInfo.classFileName)
             else
-                row.checkmark:Hide()
+                row.icon:SetTexture("Interface\\Icons\\INV_Misc_QuestionMark")
             end
-        else
-            row.charName:SetText("")
-            row.rating:SetText("\226\128\148") -- em dash
-            row.rating:SetTextColor(0.5, 0.5, 0.5)
-            row.checkmark:Hide()
+
+            -- Find best character across all specs of this class
+            local matches = FindMatchingCharactersForClass(classID, challenge)
+            local bestMatch = matches[1]
+
+            PopulateRow(row, bestMatch, challenge)
+
+            -- Tooltip: class name, then each character with spec/rating/bracket detail
+            row.tooltipData = {
+                title      = classInfo and classInfo.className or ("Class " .. classID),
+                classMode  = true,
+                characters = matches,
+                goalRating = challenge.goalRating,
+            }
+
+            -- Layout
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", 0, -PADDING - (rowIndex - 1) * ROW_HEIGHT)
+            row:SetPoint("RIGHT", overlayFrame, "RIGHT", 0, 0)
+            row:Show()
+
+            local nw = row.charName:GetStringWidth() or 0
+            local rw = row.rating:GetStringWidth() or 0
+            if nw > maxNameWidth then maxNameWidth = nw end
+            if rw > maxRatingWidth then maxRatingWidth = rw end
+        end
+    else
+        -- ============================================================
+        -- SPEC CHALLENGE: one row per spec
+        -- ============================================================
+        local specIDs = GetSortedSpecIDs(challenge)
+        if #specIDs == 0 then
+            overlayFrame:Hide()
+            return
         end
 
-        -- Tooltip data (Story 4-3)
-        row.tooltipData = {
-            specName   = specInfo and specInfo.specName or ("Spec " .. specID),
-            characters = matches,
-            goalRating = challenge.goalRating,
-        }
+        overlayFrame:Show()
 
-        -- Layout
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", 0, -PADDING - (rowIndex - 1) * ROW_HEIGHT)
-        row:SetPoint("RIGHT", overlayFrame, "RIGHT", 0, 0)
-        row:Show()
+        for _, specID in ipairs(specIDs) do
+            rowIndex = rowIndex + 1
+            local row = GetRow(rowIndex)
 
-        -- Track widths for dynamic sizing
-        local nw = row.charName:GetStringWidth() or 0
-        local rw = row.rating:GetStringWidth() or 0
-        if nw > maxNameWidth then maxNameWidth = nw end
-        if rw > maxRatingWidth then maxRatingWidth = rw end
+            local specInfo = NXR.specData[specID]
+            row.icon:SetTexture(specInfo and specInfo.icon or "Interface\\Icons\\INV_Misc_QuestionMark")
+
+            local matches = FindMatchingCharactersForSpec(specID, challenge)
+            local bestMatch = matches[1]
+
+            PopulateRow(row, bestMatch, challenge)
+
+            -- Tooltip: spec name, then each character
+            row.tooltipData = {
+                title      = specInfo and specInfo.specName or ("Spec " .. specID),
+                classMode  = false,
+                characters = matches,
+                goalRating = challenge.goalRating,
+            }
+
+            -- Layout
+            row:ClearAllPoints()
+            row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", 0, -PADDING - (rowIndex - 1) * ROW_HEIGHT)
+            row:SetPoint("RIGHT", overlayFrame, "RIGHT", 0, 0)
+            row:Show()
+
+            local nw = row.charName:GetStringWidth() or 0
+            local rw = row.rating:GetStringWidth() or 0
+            if nw > maxNameWidth then maxNameWidth = nw end
+            if rw > maxRatingWidth then maxRatingWidth = rw end
+        end
     end
 
     -- Resize overlay dynamically
