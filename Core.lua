@@ -4,19 +4,19 @@ local addonName, NXR = ...
 -- Bracket constants
 -- ============================================================================
 
-NXR.BRACKET_2V2          = 0
-NXR.BRACKET_3V3          = 1
+NXR.BRACKET_2V2          = 1
+NXR.BRACKET_3V3          = 2
 NXR.BRACKET_BLITZ        = 4
 NXR.BRACKET_SOLO_SHUFFLE = 7
 
 NXR.BRACKET_NAMES = {
-    [0] = "2v2",
-    [1] = "3v3",
+    [1] = "2v2",
+    [2] = "3v3",
     [4] = "Blitz BG",
     [7] = "Solo Shuffle",
 }
 
-NXR.TRACKED_BRACKETS = { 0, 1, 4, 7 }
+NXR.TRACKED_BRACKETS = { 1, 2, 4, 7 }
 
 NXR.PER_SPEC_BRACKETS = {
     [4] = true,   -- Blitz BG (per-spec rating)
@@ -140,14 +140,14 @@ function NXR.GetRating(charKey, bracketIndex, specID)
 end
 
 local function CapturePvPStats()
-    if not C_PvP or not C_PvP.GetRatedBracketInfo then return end
+    if not GetPersonalRatedInfo then return end
 
     NXR.UpdateCharacterInfo()
 
     for _, bracketIndex in ipairs(NXR.TRACKED_BRACKETS) do
-        local info = C_PvP.GetRatedBracketInfo(bracketIndex)
-        if info and info.rating and info.rating > 0 then
-            NXR.SaveBracketData(bracketIndex, info.rating, info.seasonMmr or 0)
+        local rating, seasonBest, weeklyBest, seasonPlayed, seasonWon, weeklyPlayed, weeklyWon, cap = GetPersonalRatedInfo(bracketIndex)
+        if rating and rating > 0 then
+            NXR.SaveBracketData(bracketIndex, rating, 0)
         end
     end
 
