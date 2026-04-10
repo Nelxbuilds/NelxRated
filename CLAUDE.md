@@ -24,7 +24,7 @@ The addon is organized around these main modules:
 - **Core / Event Handling**: Registers for PvP events, extracts rating/MMR data, persists to SavedVariables
 - **Challenge System**: Multi-spec, multi-bracket challenge CRUD with active challenge logic
 - **Overlay**: Movable frame showing spec rows from the active challenge with ratings and tooltips
-- **Settings UI**: Multi-tab panel (Main, Challenges, Characters, Settings, Import/Export)
+- **Main Frame**: Custom standalone frame (`/nxr`) with vertical sidebar navigation (Home, Challenges, Characters, Settings, Import/Export)
 - **Data Layer**: Character tracking, challenge management, and cross-account Import/Export
 
 ## Bracket Indices
@@ -61,6 +61,17 @@ These are the `C_PvP.GetRatedBracketInfo()` bracket indices:
 ## Bug Tracking
 
 Bugs are tracked locally in `docs/bugs.md`. When you find a bug (via verify-story, lua-linter, or in-game testing), add an entry there using the template in that file. Do not open GitHub issues for bugs found during development.
+
+## Working Style
+
+- For bug fixes: read the bug, read the relevant code, fix it. Don't spawn agents or run linters unless asked.
+- Keep responses short. No summaries of what was done — the diff speaks for itself.
+
+## Token Efficiency
+
+- Simple bug fixes (1-3 lines) should NOT spawn agents. Use direct Read + Edit.
+- Only use agents (implement-story, lua-linter, etc.) when explicitly asked or for multi-file tasks.
+- Don't re-read files already in context.
 
 ## Addon Namespace
 

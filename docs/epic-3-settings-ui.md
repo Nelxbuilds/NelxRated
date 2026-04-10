@@ -1,31 +1,38 @@
-# Epic 3 — Settings UI
+# Epic 3 — Main Frame & Navigation
 
-The settings panel framework: slash command, tab bar, and all non-challenge tabs (Main, Characters, Settings, Import/Export). The Challenges tab UI is covered in Epic 2.
+A custom standalone frame opened via `/nxr`, with a vertical sidebar navigation. All addon functionality lives inside this frame: Challenges, Characters, Settings, and Import/Export. The Challenges tab content already exists from Epic 2 and is embedded here.
+
+**Depends on**: Epic 2 (Challenges panel)
 
 ---
 
-## Story 3-1 — Settings Frame, Tab Bar & Main Tab
+## Story 3-1 — Main Frame & Vertical Sidebar Navigation
 
-**Goal**: Create the settings panel registered with WoW's Settings API, with a tab bar and a main landing page.
+**Goal**: Create the main NelxRated frame with a vertical sidebar for tab navigation. Tabs switch content panels; only one is visible at a time.
 
 **Acceptance Criteria**:
 
-- [ ] `/nelxrated` and `/nxr` open the settings panel
+- [ ] `/nelxrated` and `/nxr` open the main frame
 - [ ] `/nxr help` prints available commands
-- [ ] The panel is registered via `Settings.RegisterCanvasLayoutCategory()` so Escape closes it
-- [ ] A tab bar at the top with tabs: Main, Challenges, Characters, Settings, Import/Export
-- [ ] Tab switching shows/hides content frames; only one visible at a time
-- [ ] The Main tab shows: addon name, short description of how to get started, version number
-- [ ] The Main tab shows CurseForge and GitHub URLs as copyable text
-- [ ] The panel uses the PvP crimson design system (crimson borders, dark background, gold section titles)
+- [ ] Pressing Escape closes the frame (`tinsert(UISpecialFrames, ...)`)
+- [ ] The frame is draggable, sized ~700x520, centered on first open
+- [ ] A vertical sidebar on the left (~140px wide) lists navigation items: Challenges, Characters, Settings, Import/Export
+- [ ] Each nav item highlights on hover and shows an active state (crimson accent) for the selected tab
+- [ ] Clicking a nav item shows only that tab's content panel; all others are hidden
+- [ ] The frame uses the PvP crimson design system (crimson borders, dark background, gold title)
+- [ ] The addon title "NelxRated" appears at the top of the sidebar
+- [ ] Default selected tab on open: Challenges
+- [ ] The existing `NXR.CreateChallengesPanel()` is embedded as the Challenges tab content
 
 **Technical Hints**:
 
-- Use `BackdropTemplate` with `Interface\\Buttons\\WHITE8X8`
+- Refactor the current `NXR.ToggleMainFrame()` to use the new layout
+- Sidebar background should be slightly lighter than the main content area (`BG_RAISED`)
+- Nav items are buttons with left-aligned text, full sidebar width
+- Active nav item: crimson left border accent or crimson background tint
+- Content area fills the space to the right of the sidebar
+- Build reusable widget helpers: `CreateNXRButton`, `CreateNXRInput` for use across tabs
 - Extract a shared `NXR_BACKDROP` table to avoid duplicating the backdrop definition
-- Design constants: `CRIMSON_BRIGHT/MID/DIM`, `BG_BASE/RAISED/HOVER`, `TEXT_TITLE/BODY/DIM`, `GOLD`
-- Build reusable widget helpers: `CreateNXRFrame`, `CreateNXRButton`, `CreateNXRInput`
-- Version: `C_AddOns.GetAddOnMetadata(addonName, "Version")`
 
 ---
 

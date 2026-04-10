@@ -192,7 +192,15 @@ end)
 -- ============================================================================
 
 SLASH_NELXRATED1 = "/nxr"
-SlashCmdList["NELXRATED"] = function()
+SLASH_NELXRATED2 = "/nelxrated"
+SlashCmdList["NELXRATED"] = function(msg)
+    local cmd = (msg or ""):lower():match("^%s*(%S+)") or ""
+    if cmd == "help" then
+        print("|cffE6D200NelxRated|r commands:")
+        print("  /nxr — Open the main window")
+        print("  /nxr help — Show this help")
+        return
+    end
     if NXR.ToggleMainFrame then
         NXR.ToggleMainFrame()
     end

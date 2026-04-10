@@ -16,7 +16,7 @@ Template:
 
 ## BUG-1 — /nxr doesn't open on first enter
 **Story**: 2-2
-**Status**: open
+**Status**: fixed
 **Found**: human checkpoint for this story
 **Description**: first command execution of /nxr does nothing. No LUA error just nothing. On second execution the challenges frame is being shown
-**Fix**: (fill in when resolved)
+**Fix**: Frame was shown by default on creation, then the toggle immediately hid it. Added early return after first creation so the frame stays visible.

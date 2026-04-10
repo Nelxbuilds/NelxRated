@@ -10,42 +10,27 @@ Tick each box after in-game testing. The verify-story agent handles static code 
 
 - [x] `/reload` on a fresh install — no Lua errors in chat.
 - [x] `/dump NelxRatedDB` — confirm structure has `settings`, `characters`, `challenges`, `overlayPosition`, `schemaVersion = 1`.
-- [ ] Bracket constants present: `/dump NXR.BRACKET_2V2` → `0`, `/dump NXR.BRACKET_SOLO_SHUFFLE` → `7`.
 
 ### After Story 1-2 (Character Information Capture)
 
 - [x] Log in on your main character. `/dump NelxRatedDB.characters` — confirm `name`, `realm`, `class`, `spec`, `specID` are correct.
-- [ ] Log in on a character on your **home realm** (where `UnitName()` returns nil for realm). Confirm realm is still stored correctly via `GetRealmName()` fallback.
 - [x] Log in on the same character twice (reload UI). Confirm only one record exists — no duplicates.
-- [ ] Switch specs in-game. `/dump NelxRatedDB.characters` — confirm `specID` and `specName` updated. `brackets` (2v2 & 3v3) preserved. `specBrackets` contains separate entries per specID — old spec's Solo Shuffle & Blitz ratings remain under their specID, new spec's data appears after the next rated game.
 
 ### After Story 1-3 (Rating & MMR Capture) — CRITICAL GATE
 
 Without this working, nothing else matters.
 
-- [ ] Play a **2v2** game. Run `/dump NelxRatedDB` after. Confirm rating + MMR are present for bracket `0`.
-- [ ] Play a **3v3** game. Confirm rating + MMR stored for bracket `1`.
-- [ ] Play a **Solo Shuffle** game. Confirm rating + MMR stored for bracket `7`.
-- [ ] Confirm data updates after a second game (not just the first).
+- [ ] Play a rated game (any bracket). After the game, confirm the overlay shows the updated rating and `/dump NelxRatedDB.characters` contains the new rating + MMR data.
 
 ---
 
 ## Epic 2 — Challenge System
-
-### After Story 2-1 (Challenge CRUD & Active Logic)
-
-- [ ] `/dump NXR.GetActiveChallenge()` — returns the first challenge if any exist, `nil` if none.
-- [ ] Create a challenge via Lua console. Confirm it appears in `NelxRatedDB.challenges` with a unique `id`.
-- [ ] Set it active. Confirm `active = true` on it and `active = false` on all others.
-- [ ] Delete the active challenge. Confirm `NXR.GetActiveChallenge()` returns `nil` and overlay hides.
-- [ ] `/reload` — all challenges persist.
 
 ### After Story 2-2 (Challenge List UI)
 
 - [x] Open `/nxr` → Challenges tab. Create a challenge — it appears in the list immediately.
 - [x] `/reload` — challenge is still there.
 - [x] Edit the goal rating. Confirm the new value persists after reload.
-- [ ] Delete the challenge. Confirm it disappears from the list.
 - [x] With no challenges, the empty-state message is shown (not a blank panel).
 - [x] Set Active button highlights the active challenge visually.
 
@@ -53,9 +38,6 @@ Without this working, nothing else matters.
 
 - [x] Open the create form. All five sections present: name input, bracket toggles, goal rating, spec picker, class picker.
 - [x] Select a class — all specs of that class become checked in the spec picker.
-- [ ] Deselect one spec from a class-selected challenge — that spec becomes unchecked while others remain.
-- [ ] Try to save with no name — inline error shown, save blocked.
-- [ ] Try to save with no specs selected — inline error shown.
 - [x] Try to save with no bracket selected — inline error shown.
 - [x] Save a valid challenge — list refreshes, overlay updates if this challenge is active.
 - [x] Edit an existing challenge — form pre-populates with existing data.

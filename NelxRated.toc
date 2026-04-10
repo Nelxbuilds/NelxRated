@@ -8,3 +8,7 @@
 Core.lua
 Challenges.lua
 ChallengesUI.lua
+CharactersUI.lua
+SettingsUI.lua
+ImportExportUI.lua
+MainFrame.lua
