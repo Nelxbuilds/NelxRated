@@ -146,7 +146,7 @@ local function CapturePvPStats()
 
     for _, bracketIndex in ipairs(NXR.TRACKED_BRACKETS) do
         local info = C_PvP.GetRatedBracketInfo(bracketIndex)
-        if info and info.seasonPlayed and info.seasonPlayed > 0 then
+        if info and info.rating and info.rating > 0 then
             NXR.SaveBracketData(bracketIndex, info.rating, info.seasonMmr or 0)
         end
     end

@@ -39,7 +39,7 @@ Template:
 **Story**: 3-1
 **Status**: open
 **Found**: Open with /nxr and just click on a tab
-**Description**: I have given you a demo with bug-3.png
+**Description**: I have given you a demo with bug-3.png and crimson border looks wrong as it is not around the whole frame.
 **Fix**: (fill in when resolved)
 
 ## BUG-2 — Cannot close export after clicking on export once
