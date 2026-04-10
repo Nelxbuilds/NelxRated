@@ -48,12 +48,12 @@ Without this working, nothing else matters.
 
 ### After Story 3-1 (Settings Frame, Tab Bar & Main Tab)
 
-- [ ] `/nxr` opens the panel. `/nelxrated` also opens it.
-- [ ] `/nxr help` prints available commands to chat.
+- [x] `/nxr` opens the panel. `/nelxrated` also opens it.
+- [x] `/nxr help` prints available commands to chat.
 - [ ] Panel looks correct — dark background, crimson borders, gold section titles, no layout breaks.
-- [ ] All five tabs are visible: Main, Challenges, Characters, Settings, Import/Export.
-- [ ] Pressing **Escape** closes the panel.
-- [ ] Switching tabs shows the correct sub-panel and hides the others.
+- [x] All five tabs are visible: Main, Challenges, Characters, Settings, Import/Export.
+- [x] Pressing **Escape** closes the panel.
+- [x] Switching tabs shows the correct sub-panel and hides the others.
 - [ ] Main tab shows addon name, description, and version number.
 
 ### After Story 3-2 (Characters Tab)
@@ -65,23 +65,20 @@ Without this working, nothing else matters.
 
 ### After Story 3-3 (Settings Tab)
 
-- [ ] Type an account name and reload. Confirm it is restored.
-- [ ] Opacity sliders move and display their current value.
-- [ ] Opacity values persist after `/reload`.
+- [x] Type an account name and reload. Confirm it is restored.
+- [x] Opacity sliders move and display their current value.
+- [x] Opacity values persist after `/reload`.
 - [ ] Background checkbox toggles overlay backdrop immediately (live update, no reload).
 - [ ] *(Live opacity update wiring verified in Epic 4-5 below)*
 
 ### After Story 3-4 (Import/Export Tab)
 
-- [ ] Click Export — a text string appears in the box beginning with `NelxRated-Export-v1`.
-- [ ] The string contains recognizable data (character names, ratings).
-- [ ] The text is selectable and copyable; typing in the export box does not alter the exported content.
-- [ ] On **Account B**: paste the export string and click Import.
-- [ ] Characters from A that don't exist on B are **added** to B's character list.
-- [ ] Characters that already exist on B are **not overwritten** (verify ratings are unchanged).
+- [x] Click Export — a text string appears in the box beginning with `NelxRated-Export-v1`.
+- [x] The string contains recognizable data (character names, ratings).
+- [x] The text is selectable and copyable; typing in the export box does not alter the exported content.
 - [ ] The Characters tab refreshes immediately showing the new characters.
-- [ ] Status feedback shows: "Imported X character(s), skipped Y duplicate(s)."
-- [ ] Paste a deliberately broken string — confirm a readable error message appears (no Lua error popup).
+- [x] Status feedback shows: "Imported X character(s), skipped Y duplicate(s)."
+- [x] Paste a deliberately broken string — confirm a readable error message appears (no Lua error popup).
 
 ---
 

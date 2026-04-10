@@ -12,17 +12,17 @@ A custom standalone frame opened via `/nxr`, with a vertical sidebar navigation.
 
 **Acceptance Criteria**:
 
-- [ ] `/nelxrated` and `/nxr` open the main frame
-- [ ] `/nxr help` prints available commands
-- [ ] Pressing Escape closes the frame (`tinsert(UISpecialFrames, ...)`)
-- [ ] The frame is draggable, sized ~700x520, centered on first open
-- [ ] A vertical sidebar on the left (~140px wide) lists navigation items: Challenges, Characters, Settings, Import/Export
-- [ ] Each nav item highlights on hover and shows an active state (crimson accent) for the selected tab
-- [ ] Clicking a nav item shows only that tab's content panel; all others are hidden
-- [ ] The frame uses the PvP crimson design system (crimson borders, dark background, gold title)
-- [ ] The addon title "NelxRated" appears at the top of the sidebar
-- [ ] Default selected tab on open: Challenges
-- [ ] The existing `NXR.CreateChallengesPanel()` is embedded as the Challenges tab content
+- [x] `/nelxrated` and `/nxr` open the main frame
+- [x] `/nxr help` prints available commands
+- [x] Pressing Escape closes the frame (`tinsert(UISpecialFrames, ...)`)
+- [x] The frame is draggable, sized ~700x520, centered on first open
+- [x] A vertical sidebar on the left (~140px wide) lists navigation items: Challenges, Characters, Settings, Import/Export
+- [x] Each nav item highlights on hover and shows an active state (crimson accent) for the selected tab
+- [x] Clicking a nav item shows only that tab's content panel; all others are hidden
+- [x] The frame uses the PvP crimson design system (crimson borders, dark background, gold title)
+- [x] The addon title "NelxRated" appears at the top of the sidebar
+- [x] Default selected tab on open: Challenges
+- [x] The existing `NXR.CreateChallengesPanel()` is embedded as the Challenges tab content
 
 **Technical Hints**:
 
@@ -42,12 +42,12 @@ A custom standalone frame opened via `/nxr`, with a vertical sidebar navigation.
 
 **Acceptance Criteria**:
 
-- [ ] Lists every character in `NelxRatedDB.characters`
-- [ ] Each row shows: name-realm, account, class/spec, and rating per bracket (2v2, 3v3, Blitz BG, Solo Shuffle)
-- [ ] Each row has a Remove button that deletes the character from `NelxRatedDB`
-- [ ] Removing a character does not affect challenges
-- [ ] Empty state: "No characters tracked yet. Play a rated game to start tracking automatically."
-- [ ] The list refreshes immediately after removal (no panel reload needed)
+- [x] Lists every character in `NelxRatedDB.characters`
+- [x] Each row shows: name-realm, account, class/spec, and rating per bracket (2v2, 3v3, Blitz BG, Solo Shuffle)
+- [x] Each row has a Remove button that deletes the character from `NelxRatedDB`
+- [x] Removing a character does not affect challenges
+- [x] Empty state: "No characters tracked yet. Play a rated game to start tracking automatically."
+- [x] The list refreshes immediately after removal (no panel reload needed)
 
 **Technical Hints**:
 
@@ -62,12 +62,12 @@ A custom standalone frame opened via `/nxr`, with a vertical sidebar navigation.
 
 **Acceptance Criteria**:
 
-- [ ] Account name text input, saved to `NelxRatedDB.settings.accountName` with a Save button
-- [ ] Opacity slider for inside arena (0-1, step 0.05), saved to `NelxRatedDB.settings.opacityInArena`
-- [ ] Opacity slider for outside arena (0-1, step 0.05), saved to `NelxRatedDB.settings.opacityOutOfArena`
-- [ ] Checkbox: "Show overlay background & border", saved to `NelxRatedDB.settings.showOverlayBackground`
-- [ ] All settings apply immediately (opacity updates live, background toggle updates live)
-- [ ] Settings persist across UI reloads
+- [x] Account name text input, saved to `NelxRatedDB.settings.accountName` with a Save button
+- [x] Opacity slider for inside arena (0-1, step 0.05), saved to `NelxRatedDB.settings.opacityInArena`
+- [x] Opacity slider for outside arena (0-1, step 0.05), saved to `NelxRatedDB.settings.opacityOutOfArena`
+- [x] Checkbox: "Show overlay background & border", saved to `NelxRatedDB.settings.showOverlayBackground`
+- [x] All settings apply immediately (opacity updates live, background toggle updates live)
+- [x] Settings persist across UI reloads
 
 **Technical Hints**:
 
@@ -83,18 +83,18 @@ A custom standalone frame opened via `/nxr`, with a vertical sidebar navigation.
 
 **Acceptance Criteria**:
 
-- [ ] **Export section**: clicking Export serializes all characters into a human-readable text format and displays it in a read-only EditBox
-- [ ] The export format includes: name, realm, account, class, spec, and per-bracket rating/MMR
-- [ ] The export EditBox supports select-all + copy; typing does not modify the content
-- [ ] **Import section**: an editable EditBox for pasting, plus an Import button
-- [ ] Import deserializes the string and merges characters into `NelxRatedDB.characters`
-- [ ] Merge rule: if a character with the same name+realm already exists, it is **skipped** (not overwritten)
-- [ ] New characters are added as new records
-- [ ] Invalid/corrupt input shows an error message (not a Lua error)
-- [ ] After import, the Characters tab and overlay refresh
-- [ ] Status feedback: "Imported X character(s), skipped Y duplicate(s)."
-- [ ] The format includes a header line (e.g. `NelxRated-Export-v1`) for validation
-- [ ] Bracket data uses Lua patterns correctly — no regex-style alternation (`|`)
+- [x] **Export section**: clicking Export serializes all characters into a human-readable text format and displays it in a read-only EditBox
+- [x] The export format includes: name, realm, account, class, spec, and per-bracket rating/MMR
+- [x] The export EditBox supports select-all + copy; typing does not modify the content
+- [x] **Import section**: an editable EditBox for pasting, plus an Import button
+- [x] Import deserializes the string and merges characters into `NelxRatedDB.characters`
+- [x] Merge rule: if a character with the same name+realm already exists, it is **skipped** (not overwritten)
+- [x] New characters are added as new records
+- [x] Invalid/corrupt input shows an error message (not a Lua error)
+- [x] After import, the Characters tab and overlay refresh
+- [x] Status feedback: "Imported X character(s), skipped Y duplicate(s)."
+- [x] The format includes a header line (e.g. `NelxRated-Export-v1`) for validation
+- [x] Bracket data uses Lua patterns correctly — no regex-style alternation (`|`)
 
 **Technical Hints**:
 

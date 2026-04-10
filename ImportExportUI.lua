@@ -155,22 +155,31 @@ function NXR.CreateImportExportPanel(parent)
     exportBtn:SetText("Export")
     exportBtn:SetNormalFontObject("GameFontNormalSmall")
 
-    local exportBox = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-    exportBox:SetPoint("TOPLEFT", 8, -60)
-    exportBox:SetPoint("RIGHT", panel, "RIGHT", -8, 0)
-    exportBox:SetHeight(120)
-    exportBox:SetBackdrop({
+    local exportScroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate,BackdropTemplate")
+    exportScroll:SetPoint("TOPLEFT", 8, -60)
+    exportScroll:SetPoint("RIGHT", panel, "RIGHT", -28, 0)
+    exportScroll:SetHeight(120)
+    exportScroll:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    exportBox:SetBackdropColor(0.06, 0.06, 0.06, 0.9)
-    exportBox:SetBackdropBorderColor(0.25, 0.25, 0.25, 0.6)
+    exportScroll:SetBackdropColor(0.06, 0.06, 0.06, 0.9)
+    exportScroll:SetBackdropBorderColor(0.25, 0.25, 0.25, 0.6)
+
+    local exportBox = CreateFrame("EditBox", nil, exportScroll)
+    exportBox:SetWidth(exportScroll:GetWidth() or 400)
     exportBox:SetFontObject("ChatFontSmall")
     exportBox:SetTextInsets(6, 6, 6, 6)
     exportBox:SetAutoFocus(false)
     exportBox:SetMultiLine(true)
     exportBox:EnableMouse(true)
+    exportScroll:SetScrollChild(exportBox)
+
+    -- Resize editbox width when scroll frame resizes
+    exportScroll:SetScript("OnSizeChanged", function(self, w)
+        exportBox:SetWidth(w)
+    end)
 
     -- Make read-only: restore text if user types
     local exportText = ""
@@ -200,22 +209,30 @@ function NXR.CreateImportExportPanel(parent)
     importLabel:SetPoint("TOPLEFT", 8, -192)
     importLabel:SetText("Import")
 
-    local importBox = CreateFrame("EditBox", nil, panel, "BackdropTemplate")
-    importBox:SetPoint("TOPLEFT", 8, -212)
-    importBox:SetPoint("RIGHT", panel, "RIGHT", -8, 0)
-    importBox:SetHeight(120)
-    importBox:SetBackdrop({
+    local importScroll = CreateFrame("ScrollFrame", nil, panel, "UIPanelScrollFrameTemplate,BackdropTemplate")
+    importScroll:SetPoint("TOPLEFT", 8, -212)
+    importScroll:SetPoint("RIGHT", panel, "RIGHT", -28, 0)
+    importScroll:SetHeight(120)
+    importScroll:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
         edgeSize = 1,
     })
-    importBox:SetBackdropColor(0.06, 0.06, 0.06, 0.9)
-    importBox:SetBackdropBorderColor(0.25, 0.25, 0.25, 0.6)
+    importScroll:SetBackdropColor(0.06, 0.06, 0.06, 0.9)
+    importScroll:SetBackdropBorderColor(0.25, 0.25, 0.25, 0.6)
+
+    local importBox = CreateFrame("EditBox", nil, importScroll)
+    importBox:SetWidth(importScroll:GetWidth() or 400)
     importBox:SetFontObject("ChatFontSmall")
     importBox:SetTextInsets(6, 6, 6, 6)
     importBox:SetAutoFocus(false)
     importBox:SetMultiLine(true)
     importBox:EnableMouse(true)
+    importScroll:SetScrollChild(importBox)
+
+    importScroll:SetScript("OnSizeChanged", function(self, w)
+        importBox:SetWidth(w)
+    end)
     importBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
 
     local statusText = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
