@@ -12,7 +12,5 @@ jobs:
       - uses: actions/checkout@v4
 
       - uses: BigWigsMods/packager@v2
-        with:
-          args: -g midnight
         env:
           CF_API_KEY: ${{ secrets.CF_API_KEY }}
