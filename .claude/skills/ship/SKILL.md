@@ -69,7 +69,7 @@ Beta bumps are lightweight — they **only create a tag and push it**. No file c
 
 ## Step 3: Confirm the Version
 
-Show the user:
+For **stable** bumps (patch/minor/major), show:
 ```
 Current version: <current>
 New version:     <new>
@@ -77,9 +77,15 @@ Tag:             v<new>
 Existing tags:   <list of relevant existing tags, or "none">
 ```
 
+For **beta** bumps (tag-only, no file changes), show:
+```
+New tag:         v<new>
+Existing tags:   <list of relevant existing beta tags, or "none">
+```
+
 If the target tag already exists, warn the user and ask how to proceed (pick a different version or abort).
 
-Ask: **"Proceed with this version bump?"**
+Ask: **"Proceed?"**
 
 Do NOT continue until the user confirms.
 
