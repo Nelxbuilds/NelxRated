@@ -1,0 +1,11 @@
+package-as: NelxRated
+
+ignore:
+  - .claude
+  - .github
+  - docs
+  - .blocked-paths
+  - .gitignore
+  - .luarc.json
+  - CLAUDE.md
+  - README.md

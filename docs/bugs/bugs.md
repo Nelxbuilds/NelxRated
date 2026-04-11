@@ -25,7 +25,7 @@ Template:
 **Story**: 4-1
 **Status**: fixed
 **Found**: opening overlay
-**Description**: the overlay is way too wide. It shouldn't take up that much space. look at resources-to-delete/002-overlay-example.png that is way smaller and works too
+**Description**: the overlay is way too wide. It shouldn't take up that much space.
 **Fix**: Reduced MIN_WIDTH from 160 to 50 so the overlay sizes to its actual content instead of forcing a wide minimum. Also previously cut padding in the width formula.
 
 ## BUG-4 — Account name is not updated in export

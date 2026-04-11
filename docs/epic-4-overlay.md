@@ -4,8 +4,6 @@ A movable overlay frame showing spec rows from the **active challenge**. Each ro
 
 **Depends on**: Epic 2 (challenge system — `NXR.GetActiveChallenge()`)
 
-**Reference**: See `resources-to-delete/002-overlay-example.png` for the target look.
-
 ---
 
 ## Story 4-1 — Overlay Frame (Movable, Persisted, Background Toggle)

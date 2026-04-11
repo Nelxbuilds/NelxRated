@@ -20,5 +20,5 @@
 release/
 dist/
 
-# Curse/Wago packager
-.pkgmeta
+# Lua Language Server
+.luarc.json
