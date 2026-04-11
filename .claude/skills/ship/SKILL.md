@@ -35,22 +35,25 @@ Use these tags to:
 - Detect if the calculated new version tag already exists (abort with a warning if so)
 - For `beta` bumps: show the user which beta tags already exist for the relevant base version (e.g. if bumping `0.2.0-beta`, list any existing `v0.2.0-beta*` tags)
 
-Examples of current versions and how bumps work:
+Examples of how bumps work (TOC version is always stable, beta is derived from tags):
 
-| Current         | `patch`   | `minor`  | `major`  | `beta`            |
-|-----------------|-----------|----------|----------|-------------------|
-| `0.1.0`         | `0.1.1`   | `0.2.0`  | `1.0.0`  | `0.1.0-beta`      |
-| `0.1.0-beta`    | `0.1.0`   | `0.2.0`  | `1.0.0`  | `0.1.0-beta-1`    |
-| `0.1.0-beta-1`  | `0.1.0`   | `0.2.0`  | `1.0.0`  | `0.1.0-beta-2`    |
-| `0.1.0-beta-12` | `0.1.0`   | `0.2.0`  | `1.0.0`  | `0.1.0-beta-13`   |
-| `1.2.3`         | `1.2.4`   | `1.3.0`  | `2.0.0`  | `1.2.3-beta`      |
+| TOC Version | Existing beta tags              | `patch` | `minor` | `major` | `beta`          |
+|-------------|---------------------------------|---------|---------|---------|-----------------|
+| `0.1.0`     | (none)                          | `0.1.1` | `0.2.0` | `1.0.0` | `0.1.0-beta`    |
+| `0.1.0`     | `v0.1.0-beta`                   | `0.1.1` | `0.2.0` | `1.0.0` | `0.1.0-beta-1`  |
+| `0.1.0`     | `v0.1.0-beta`, `v0.1.0-beta-1` | `0.1.1` | `0.2.0` | `1.0.0` | `0.1.0-beta-2`  |
+| `1.2.3`     | (none)                          | `1.2.4` | `1.3.0` | `2.0.0` | `1.2.3-beta`    |
 
 ### Beta bump rules
 
-- If current version has **no pre-release suffix** (e.g. `0.1.0`): result is `0.1.0-beta` (first beta of that version)
-- If current version is `X.Y.Z-beta` (no number): result is `X.Y.Z-beta-1`
-- If current version is `X.Y.Z-beta-N`: result is `X.Y.Z-beta-(N+1)`
-- The beta suffix always uses hyphens: `-beta`, `-beta-1`, `-beta-2`, etc.
+Beta versions are derived from **existing git tags**, not the TOC version. The TOC always holds the stable base version.
+
+Given the TOC version `X.Y.Z`, look at existing tags matching `vX.Y.Z-beta*`:
+- If no `vX.Y.Z-beta*` tags exist: new version is `X.Y.Z-beta`
+- If `vX.Y.Z-beta` exists but no numbered betas: new version is `X.Y.Z-beta-1`
+- If `vX.Y.Z-beta-N` is the highest numbered beta: new version is `X.Y.Z-beta-(N+1)`
+
+The beta suffix always uses hyphens: `-beta`, `-beta-1`, `-beta-2`, etc.
 
 ### Stable bump rules
 
@@ -60,9 +63,9 @@ Examples of current versions and how bumps work:
 
 If the user provides an explicit version, use it as-is (validate it looks like semver).
 
-### Beta releases skip release-prep
+### Beta releases are tag-only
 
-When bumping to a `beta` version, **skip the release-prep agent** (Step 4) — beta tags are lightweight development milestones, not full releases. Still update the TOC and CHANGELOG.
+Beta bumps are lightweight — they **only create a tag and push it**. No file changes, no commit, no release-prep. Skip Steps 4, 5, 6, and 7 entirely. Go directly from Step 3 (confirm) to Step 8 (tag) then Step 9 (push).
 
 ## Step 3: Confirm the Version
 
