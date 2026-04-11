@@ -5,6 +5,7 @@
 ## Version: 0.1.0
 ## X-Website: https://github.com/Nelxbuilds/NelxRated
 ## X-BugReport: https://github.com/Nelxbuilds/NelxRated/issues
+## X-Curse-Project-ID: 1510660
 ## SavedVariables: NelxRatedDB
 
 Core.lua
