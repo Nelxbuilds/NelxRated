@@ -4,7 +4,7 @@ local addonName, NXR = ...
 -- Constants
 -- ============================================================================
 
-local ROW_HEIGHT     = 52
+local ROW_HEIGHT     = 64
 local ROW_GAP        = 4
 local ICON_SIZE      = 20
 local ICON_GAP       = 2
@@ -80,17 +80,10 @@ local function CreateReusableRow(parent)
         edgeSize = 1,
     })
 
-    row.nameStr = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    row.nameStr:SetPoint("TOPLEFT", 8, -6)
-
-    row.subStr = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    row.subStr:SetPoint("TOPLEFT", 8, -24)
-    row.subStr:SetTextColor(0.55, 0.55, 0.55)
-
-    -- Buttons (right side)
+    -- Buttons (top-right)
     row.activeBtn = CreateFrame("Button", nil, row, "UIPanelButtonTemplate")
     row.activeBtn:SetSize(72, 22)
-    row.activeBtn:SetPoint("TOPRIGHT", -6, -14)
+    row.activeBtn:SetPoint("TOPRIGHT", -6, -6)
     row.activeBtn:SetNormalFontObject("GameFontNormalSmall")
     row.activeBtn:SetHighlightFontObject("GameFontHighlightSmall")
 
@@ -108,13 +101,26 @@ local function CreateReusableRow(parent)
     row.deleteBtn:SetNormalFontObject("GameFontNormalSmall")
     row.deleteBtn:SetHighlightFontObject("GameFontHighlightSmall")
 
-    -- Pre-create icon textures
+    -- Name and subtitle (left side, constrained to not overlap buttons)
+    row.nameStr = row:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    row.nameStr:SetPoint("TOPLEFT", 8, -6)
+    row.nameStr:SetPoint("RIGHT", row.deleteBtn, "LEFT", -8, 0)
+    row.nameStr:SetJustifyH("LEFT")
+    row.nameStr:SetWordWrap(false)
+
+    row.subStr = row:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    row.subStr:SetPoint("TOPLEFT", 8, -24)
+    row.subStr:SetPoint("RIGHT", row.deleteBtn, "LEFT", -8, 0)
+    row.subStr:SetJustifyH("LEFT")
+    row.subStr:SetWordWrap(false)
+    row.subStr:SetTextColor(0.55, 0.55, 0.55)
+
+    -- Pre-create icon textures (bottom row, left-aligned)
     row.icons = {}
     for i = 1, MAX_ICONS do
         local ic = row:CreateTexture(nil, "ARTWORK")
         ic:SetSize(ICON_SIZE, ICON_SIZE)
-        ic:SetPoint("RIGHT", row.deleteBtn, "LEFT",
-            -10 - ((i - 1) * (ICON_SIZE + ICON_GAP)), 0)
+        ic:SetPoint("BOTTOMLEFT", 8 + ((i - 1) * (ICON_SIZE + ICON_GAP)), 4)
         ic:Hide()
         row.icons[i] = ic
     end

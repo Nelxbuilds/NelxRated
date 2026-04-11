@@ -14,6 +14,13 @@ Template:
 **Fix**: (fill in when resolved)
 -->
 
+## BUG-7 — Challenge entry overlap
+**Story**: 2-2
+**Status**: fixed
+**Found**: Created a challenge with many possibilities
+**Description**: Look at the provided image bug-7.png. There you can see text is overlapping with the spec icons. Due to having way more space. Restructure the list entry.
+**Fix**: Restructured challenge list rows: increased ROW_HEIGHT from 52 to 64, moved buttons to top-right (y=-6), constrained name/subtitle text with a right anchor to stop before the buttons, and repositioned spec/class icons to a bottom-left row so they no longer overlap with text.
+
 ## BUG-6 — Overlay hard to move
 **Story**: 4-1
 **Status**: fixed
