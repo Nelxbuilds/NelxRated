@@ -200,7 +200,7 @@ local function CreateMainFrame()
 
     -- Content area (right of sidebar)
     contentArea = CreateFrame("Frame", nil, f)
-    contentArea:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 3, -8)
+    contentArea:SetPoint("TOPLEFT", SIDEBAR_WIDTH + 16, -8)
     contentArea:SetPoint("BOTTOMRIGHT", -8, 8)
 
     -- Create tab panels
