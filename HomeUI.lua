@@ -4,15 +4,17 @@ local addonName, NXR = ...
 -- Home Tab (Story 5-1)
 -- ============================================================================
 
+local PADDING = 8
+
 local function CreateCopyableLink(parent, label, url, yOffset)
     local lbl = parent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    lbl:SetPoint("TOPLEFT", 0, yOffset)
+    lbl:SetPoint("TOPLEFT", PADDING, yOffset)
     lbl:SetText(label)
     lbl:SetTextColor(0.7, 0.7, 0.7)
 
     local box = CreateFrame("EditBox", nil, parent, "BackdropTemplate")
     box:SetSize(320, 22)
-    box:SetPoint("TOPLEFT", 0, yOffset - 16)
+    box:SetPoint("TOPLEFT", PADDING, yOffset - 16)
     box:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
@@ -37,11 +39,11 @@ function NXR.CreateHomePanel(parent)
     local scroll = CreateFrame("Frame", nil, parent)
     scroll:SetAllPoints()
 
-    local y = 0
+    local y = -PADDING
 
     -- Addon name
     local title = scroll:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    title:SetPoint("TOPLEFT", 0, y)
+    title:SetPoint("TOPLEFT", PADDING, y)
     title:SetText("NelxRated")
     title:SetTextColor(unpack(NXR.COLORS.GOLD))
     y = y - 22
@@ -49,15 +51,15 @@ function NXR.CreateHomePanel(parent)
     -- Version
     local version = C_AddOns.GetAddOnMetadata(addonName, "Version") or "?"
     local ver = scroll:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    ver:SetPoint("TOPLEFT", 0, y)
+    ver:SetPoint("TOPLEFT", PADDING, y)
     ver:SetText("Version " .. version)
     ver:SetTextColor(0.6, 0.6, 0.6)
     y = y - 24
 
     -- Description
     local desc = scroll:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    desc:SetPoint("TOPLEFT", 0, y)
-    desc:SetPoint("RIGHT", scroll, "RIGHT", -8, 0)
+    desc:SetPoint("TOPLEFT", PADDING, y)
+    desc:SetPoint("RIGHT", scroll, "RIGHT", -PADDING, 0)
     desc:SetJustifyH("LEFT")
     desc:SetSpacing(2)
     desc:SetText("Personal PvP rating challenge tracker for Solo Shuffle, 2v2, 3v3, and Blitz BG. Track ratings and MMR by spec or class across multiple characters and accounts.")
@@ -66,7 +68,7 @@ function NXR.CreateHomePanel(parent)
 
     -- Getting Started section
     local gsTitle = scroll:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    gsTitle:SetPoint("TOPLEFT", 0, y)
+    gsTitle:SetPoint("TOPLEFT", PADDING, y)
     gsTitle:SetText("Getting Started")
     gsTitle:SetTextColor(unpack(NXR.COLORS.GOLD))
     y = y - 24
@@ -80,8 +82,8 @@ function NXR.CreateHomePanel(parent)
 
     for _, step in ipairs(steps) do
         local bullet = scroll:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-        bullet:SetPoint("TOPLEFT", 8, y)
-        bullet:SetPoint("RIGHT", scroll, "RIGHT", -8, 0)
+        bullet:SetPoint("TOPLEFT", PADDING * 2, y)
+        bullet:SetPoint("RIGHT", scroll, "RIGHT", -PADDING, 0)
         bullet:SetJustifyH("LEFT")
         bullet:SetText("|cff999999-|r  " .. step)
         bullet:SetTextColor(0.8, 0.8, 0.8)
@@ -92,7 +94,7 @@ function NXR.CreateHomePanel(parent)
 
     -- Links section
     local linksTitle = scroll:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    linksTitle:SetPoint("TOPLEFT", 0, y)
+    linksTitle:SetPoint("TOPLEFT", PADDING, y)
     linksTitle:SetText("Links")
     linksTitle:SetTextColor(unpack(NXR.COLORS.GOLD))
     y = y - 24
