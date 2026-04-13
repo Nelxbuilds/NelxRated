@@ -12,6 +12,21 @@ Template:
 **Description**: what can be improved?
 -->
 
+## IMP-7 — Add y-axis rating milestones
+**Story**: 6-7
+**Status**: open
+**Description**: Every 100, 200 or 400 rating there should be a line on the y-axis - subtile and in background. This should be more a visual help. Additionally don't start drawing at the bottom and top. there should be some better visualisation for the graph to not be completely "zoomed" in.
+
+## IMP-6 — Add a color option for history charting
+**Story**: 6-8
+**Status**: open
+**Description**: In settings add a color option to choose a different color for history charting. currently we are using crimson. but I guess using class color would work too. This should work with every class color, only exception might be rogue due to similar color & solid line for goal line.
+
+## IMP-5 — Account name is not updated in export
+**Story**: 3-4
+**Status**: open
+**Description**: While I do understand that most likely account name would be updated with a new game being recorded. If there is no account name set for records and in settings a new account name is being added. Wouldn't it make sense to add this account name to those empty entries. Do not overwrite existing account names.
+
 ## IMP-4 — Add a new setting scale
 **Story**: 3-3
 **Status**: done

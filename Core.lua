@@ -63,6 +63,7 @@ local SETTINGS_DEFAULTS = {
     showOverlay           = true,
     overlayLocked         = false,
     overlayScale          = 1.0,
+    chartColor            = "default",
 }
 
 local CURRENT_SCHEMA = 1

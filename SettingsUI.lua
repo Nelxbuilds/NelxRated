@@ -12,6 +12,7 @@ local scaleSlider, scaleValueText
 local bgCheckbox
 local lockCheckbox
 local overlayToggleBtn
+local chartColorBtn
 
 local function Round(val, step)
     return math.floor(val / step + 0.5) * step
@@ -201,6 +202,51 @@ function NXR.CreateSettingsPanel(parent)
         end
     end)
 
+    -- ----------------------------------------------------------------
+    -- Graph section
+    -- ----------------------------------------------------------------
+    y = y + 16
+
+    local graphHeader = panel:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+    graphHeader:SetPoint("TOPLEFT", 8, -y)
+    graphHeader:SetText("Graph")
+    graphHeader:SetTextColor(unpack(NXR.COLORS.GOLD))
+    y = y + 24
+
+    local chartLabel = panel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    chartLabel:SetPoint("TOPLEFT", 8, -y)
+    chartLabel:SetText("Chart Line Color")
+    y = y + 18
+
+    chartColorBtn = NXR.CreateNXRButton(panel, "Default (Crimson)", 180, 24)
+    chartColorBtn:SetPoint("TOPLEFT", 10, -y)
+
+    local function UpdateChartColorLabel()
+        local val = NelxRatedDB.settings.chartColor or "default"
+        if val == "class" then
+            chartColorBtn.label:SetText("Class Color")
+        else
+            chartColorBtn.label:SetText("Default (Crimson)")
+        end
+    end
+
+    chartColorBtn:SetScript("OnClick", function(self)
+        MenuUtil.CreateContextMenu(self, function(_, rootDescription)
+            rootDescription:CreateButton("Default (Crimson)", function()
+                NelxRatedDB.settings.chartColor = "default"
+                UpdateChartColorLabel()
+                if NXR.RefreshHistoryGraph then NXR.RefreshHistoryGraph() end
+            end)
+            rootDescription:CreateButton("Class Color", function()
+                NelxRatedDB.settings.chartColor = "class"
+                UpdateChartColorLabel()
+                if NXR.RefreshHistoryGraph then NXR.RefreshHistoryGraph() end
+            end)
+        end)
+    end)
+
+    y = y + 40
+
     -- Populate on show
     panel:SetScript("OnShow", function()
         accountInput:SetText(NelxRatedDB.settings.accountName or "")
@@ -214,6 +260,7 @@ function NXR.CreateSettingsPanel(parent)
         else
             overlayToggleBtn.label:SetText("Show Overlay")
         end
+        UpdateChartColorLabel()
     end)
 
     return panel

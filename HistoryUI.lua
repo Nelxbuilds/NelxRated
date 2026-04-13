@@ -12,12 +12,15 @@ local PADDING_BOT   = 22
 local LINE_W        = 1.5
 local MIN_POINTS    = 3
 local GOAL_LINE_COLOR = { 1.0, 0.82, 0.0, 0.8 }
+local GRID_COLOR      = { 0.3, 0.3, 0.3, 0.4 }
 
 -- State
 local graphFrame, canvas, placeholder
 local lines = {}
 local xLabels = {}
 local yLabels = {}
+local gridLines = {}
+local gridLabels = {}
 local goalLine, goalLabel
 local filterCharKey, filterSpecID, filterBracketIndex
 local charButton, specButton, bracketButton
@@ -58,9 +61,37 @@ local function HideLabels(pool)
     for _, lbl in ipairs(pool) do lbl:Hide() end
 end
 
+local function GetOrCreateGridLine(parent, index)
+    if not gridLines[index] then
+        local line = parent:CreateLine(nil, "BACKGROUND")
+        line:SetThickness(1)
+        line:SetColorTexture(unpack(GRID_COLOR))
+        gridLines[index] = line
+    end
+    return gridLines[index]
+end
+
+local function HideGridLines(fromIndex)
+    for i = fromIndex, #gridLines do
+        gridLines[i]:Hide()
+    end
+end
+
 -- ============================================================================
 -- Graph rendering (Story 6-4)
 -- ============================================================================
+
+local function ResolveLineColor()
+    local setting = NelxRatedDB.settings.chartColor or "default"
+    if setting == "class" and filterCharKey then
+        local char = NelxRatedDB.characters[filterCharKey]
+        if char and char.class and RAID_CLASS_COLORS then
+            local cc = RAID_CLASS_COLORS[char.class]
+            if cc then return cc.r, cc.g, cc.b end
+        end
+    end
+    return unpack(NXR.COLORS.CRIMSON_BRIGHT)
+end
 
 local function RefreshGraph()
     if not canvas then return end
@@ -72,6 +103,8 @@ local function RefreshGraph()
         HideLines(1)
         HideLabels(xLabels)
         HideLabels(yLabels)
+        HideGridLines(1)
+        HideLabels(gridLabels)
         if goalLine then goalLine:Hide() end
         if goalLabel then goalLabel:Hide() end
         return
@@ -102,16 +135,20 @@ local function RefreshGraph()
             if goalRating and goalRating > maxR then
                 maxR = goalRating
             end
+            if goalRating and goalRating < minR then
+                minR = goalRating
+            end
         end
     end
 
-    -- Guard against flat line
+    -- Story 6-7: Y-axis padding (5-10% of range, minimum 25)
+    local rawRange = maxR - minR
+    if rawRange < 1 then rawRange = 2 end
+    local pad = math.max(25, rawRange * 0.08)
+    minR = minR - pad
+    maxR = maxR + pad
+
     local ratingRange = maxR - minR
-    if ratingRange < 1 then
-        minR = minR - 1
-        maxR = maxR + 1
-        ratingRange = 2
-    end
 
     local function toCanvas(index, rating)
         local x = ((index - 1) / (#history - 1)) * W
@@ -119,13 +156,43 @@ local function RefreshGraph()
         return x, y
     end
 
-    -- Draw line segments
+    -- Story 6-7: Grid lines at rating milestones
+    HideGridLines(1)
+    HideLabels(gridLabels)
+
+    local interval
+    if ratingRange < 400 then interval = 100
+    elseif ratingRange < 800 then interval = 200
+    else interval = 400
+    end
+
+    local usedGrid = 0
+    local firstMilestone = math.ceil(minR / interval) * interval
+    for ms = firstMilestone, maxR, interval do
+        usedGrid = usedGrid + 1
+        local gl = GetOrCreateGridLine(canvas, usedGrid)
+        local _, msY = toCanvas(1, ms)
+        gl:SetStartPoint("BOTTOMLEFT", 0, msY)
+        gl:SetEndPoint("BOTTOMLEFT", W, msY)
+        gl:Show()
+
+        local lbl = GetOrCreateLabel(gridLabels, graphFrame)
+        lbl:SetText("|cff4d4d4d" .. math.floor(ms + 0.5) .. "|r")
+        lbl:ClearAllPoints()
+        lbl:SetPoint("RIGHT", graphFrame, "BOTTOMLEFT",
+            PADDING_LEFT - 4, PADDING_BOT + msY)
+    end
+    HideGridLines(usedGrid + 1)
+
+    -- Draw line segments (Story 6-8: resolve color)
+    local lr, lg, lb = ResolveLineColor()
     local usedLines = 0
     for i = 2, #history do
         local x1, y1 = toCanvas(i - 1, history[i - 1].rating)
         local x2, y2 = toCanvas(i, history[i].rating)
         usedLines = usedLines + 1
         local line = GetOrCreateLine(canvas, usedLines)
+        line:SetColorTexture(lr, lg, lb)
         line:SetStartPoint("BOTTOMLEFT", x1, y1)
         line:SetEndPoint("BOTTOMLEFT", x2, y2)
         line:Show()

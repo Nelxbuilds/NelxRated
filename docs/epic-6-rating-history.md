@@ -137,3 +137,52 @@ Track rating changes over time per character/spec/bracket and visualize progress
 - Use `MenuUtil.CreateContextMenu()` or custom button+dropdown pattern (no EasyMenu)
 - Current character key is available via `NXR.currentCharKey`
 - Current spec via `NelxRatedDB.characters[key].specID`
+
+---
+
+## Story 6-7 — Y-Axis Rating Milestones & Graph Padding
+
+**Goal**: Add subtle horizontal grid lines at regular rating intervals and add vertical padding so the graph doesn't feel overly zoomed in.
+
+**Improvement**: IMP-7
+
+**Acceptance Criteria**:
+
+- [x] Draw subtle horizontal grid lines at regular rating intervals (every 100, 200, or 400 rating depending on the Y-axis range)
+- [x] Grid lines use a muted color (e.g., `{0.3, 0.3, 0.3, 0.4}`) and sit behind the data line
+- [x] Each grid line has a small label on the left showing the rating value
+- [x] Interval selection is automatic: use 100 for ranges < 400, 200 for ranges < 800, 400 for larger ranges
+- [x] Add vertical padding to the Y-axis: `minRating` and `maxRating` are expanded by ~5-10% of the range (or a minimum of 25 rating) so the line doesn't touch the top/bottom edges
+- [x] The padding is applied before grid line and tick label calculations
+- [x] Grid line objects are pooled and reused like existing line/label pools
+- [x] Existing axis border lines and tick labels continue to work correctly with the new padding
+
+**Technical Hints**:
+
+- Calculate the milestone interval based on the padded range, then iterate from the first milestone >= `minRating` to the last <= `maxRating`
+- Grid lines are full-width `CreateLine()` calls at each milestone's Y position, drawn at a low frame level or strata so the data line renders on top
+- Reuse the same pooling pattern as the data line segments
+
+---
+
+## Story 6-8 — Chart Line Color Setting
+
+**Goal**: Add a setting to choose the history chart line color — crimson (default) or class color.
+
+**Improvement**: IMP-6
+
+**Acceptance Criteria**:
+
+- [x] New setting `NelxRatedDB.settings.chartColor` with values `"default"` (default) and `"class"`
+- [x] Setting appears in the Settings tab under a "History" or "Graph" section
+- [x] When set to `"default"`, the chart line uses `CRIMSON_BRIGHT` (current behavior)
+- [x] When set to `"class"`, the chart line uses the WoW class color of the currently selected character
+- [x] Class colors are sourced from `RAID_CLASS_COLORS[englishClass]`
+- [x] Changing the setting immediately refreshes the graph if the History tab is visible
+- [x] The goal line always remains gold regardless of this setting
+
+**Technical Hints**:
+
+- Add the setting to `DEFAULT_SETTINGS` in Core.lua and `InitDB()` defaults
+- In the graph render function, resolve the line color once before the draw loop based on the setting and selected character's class
+- The character's `englishClass` is available from `NelxRatedDB.characters[charKey].class`
