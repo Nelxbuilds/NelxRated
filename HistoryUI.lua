@@ -11,14 +11,15 @@ local PADDING_TOP   = 10
 local PADDING_BOT   = 22
 local LINE_W        = 1.5
 local MIN_POINTS    = 3
+local DOT_SIZE        = 6
 local GOAL_LINE_COLOR = { 1.0, 0.82, 0.0, 0.8 }
 local GRID_COLOR      = { 0.3, 0.3, 0.3, 0.4 }
 
 -- State
 local graphFrame, canvas, placeholder
 local lines = {}
+local dots = {}
 local xLabels = {}
-local yLabels = {}
 local gridLines = {}
 local gridLabels = {}
 local goalLine, goalLabel
@@ -77,6 +78,42 @@ local function HideGridLines(fromIndex)
     end
 end
 
+local function GetOrCreateDot(parent, index)
+    if not dots[index] then
+        local dot = CreateFrame("Frame", nil, parent)
+        dot:SetSize(DOT_SIZE, DOT_SIZE)
+        dot:SetFrameStrata("DIALOG")
+
+        local tex = dot:CreateTexture(nil, "OVERLAY")
+        tex:SetAllPoints()
+        tex:SetColorTexture(1, 1, 1)
+        dot.tex = tex
+
+        dot:SetScript("OnEnter", function(self)
+            if self.tipRating then
+                GameTooltip:SetOwner(self, "ANCHOR_TOP")
+                GameTooltip:AddLine(self.tipRating, 1, 1, 1)
+                if self.tipDate then
+                    GameTooltip:AddLine(self.tipDate, 0.7, 0.7, 0.7)
+                end
+                GameTooltip:Show()
+            end
+        end)
+        dot:SetScript("OnLeave", function()
+            GameTooltip:Hide()
+        end)
+
+        dots[index] = dot
+    end
+    return dots[index]
+end
+
+local function HideDots(fromIndex)
+    for i = fromIndex, #dots do
+        dots[i]:Hide()
+    end
+end
+
 -- ============================================================================
 -- Graph rendering (Story 6-4)
 -- ============================================================================
@@ -85,8 +122,8 @@ local function ResolveLineColor()
     local setting = NelxRatedDB.settings.chartColor or "default"
     if setting == "class" and filterCharKey then
         local char = NelxRatedDB.characters[filterCharKey]
-        if char and char.class and RAID_CLASS_COLORS then
-            local cc = RAID_CLASS_COLORS[char.class]
+        if char and char.classFileName and RAID_CLASS_COLORS then
+            local cc = RAID_CLASS_COLORS[char.classFileName]
             if cc then return cc.r, cc.g, cc.b end
         end
     end
@@ -101,8 +138,8 @@ local function RefreshGraph()
     if not history or #history < MIN_POINTS then
         placeholder:Show()
         HideLines(1)
+        HideDots(1)
         HideLabels(xLabels)
-        HideLabels(yLabels)
         HideGridLines(1)
         HideLabels(gridLabels)
         if goalLine then goalLine:Hide() end
@@ -141,12 +178,26 @@ local function RefreshGraph()
         end
     end
 
-    -- Story 6-7: Y-axis padding (5-10% of range, minimum 25)
+    -- Choose grid interval based on raw data range
     local rawRange = maxR - minR
     if rawRange < 1 then rawRange = 2 end
-    local pad = math.max(25, rawRange * 0.08)
-    minR = minR - pad
-    maxR = maxR + pad
+    local interval
+    if rawRange <= 300 then interval = 50
+    elseif rawRange <= 600 then interval = 100
+    else interval = 200
+    end
+
+    -- Snap minR/maxR to interval boundaries for clean labels
+    minR = math.floor(minR / interval) * interval
+    maxR = math.ceil(maxR / interval) * interval
+    -- Ensure at least one interval of padding on each side
+    local dataMin, dataMax = math.huge, -math.huge
+    for _, pt in ipairs(history) do
+        if pt.rating < dataMin then dataMin = pt.rating end
+        if pt.rating > dataMax then dataMax = pt.rating end
+    end
+    if minR >= dataMin then minR = minR - interval end
+    if maxR <= dataMax then maxR = maxR + interval end
 
     local ratingRange = maxR - minR
 
@@ -156,15 +207,9 @@ local function RefreshGraph()
         return x, y
     end
 
-    -- Story 6-7: Grid lines at rating milestones
+    -- Grid lines at rating milestones (with labels)
     HideGridLines(1)
     HideLabels(gridLabels)
-
-    local interval
-    if ratingRange < 400 then interval = 100
-    elseif ratingRange < 800 then interval = 200
-    else interval = 400
-    end
 
     local usedGrid = 0
     local firstMilestone = math.ceil(minR / interval) * interval
@@ -177,7 +222,7 @@ local function RefreshGraph()
         gl:Show()
 
         local lbl = GetOrCreateLabel(gridLabels, graphFrame)
-        lbl:SetText("|cff4d4d4d" .. math.floor(ms + 0.5) .. "|r")
+        lbl:SetText("|cffaaaaaa" .. ms .. "|r")
         lbl:ClearAllPoints()
         lbl:SetPoint("RIGHT", graphFrame, "BOTTOMLEFT",
             PADDING_LEFT - 4, PADDING_BOT + msY)
@@ -199,20 +244,19 @@ local function RefreshGraph()
     end
     HideLines(usedLines + 1)
 
-    -- Y-axis labels (5 ticks)
-    HideLabels(yLabels)
-    local yTicks = 4
-    for i = 0, yTicks do
-        local frac = i / yTicks
-        local rating = minR + frac * ratingRange
-        local yPx = frac * H
-
-        local lbl = GetOrCreateLabel(yLabels, graphFrame)
-        lbl:SetText("|cffaaaaaa" .. math.floor(rating + 0.5) .. "|r")
-        lbl:ClearAllPoints()
-        lbl:SetPoint("RIGHT", graphFrame, "BOTTOMLEFT",
-            PADDING_LEFT - 4, PADDING_BOT + yPx)
+    -- Data point dots with tooltips
+    for i = 1, #history do
+        local pt = history[i]
+        local px, py = toCanvas(i, pt.rating)
+        local dot = GetOrCreateDot(canvas, i)
+        dot.tex:SetColorTexture(lr, lg, lb)
+        dot:ClearAllPoints()
+        dot:SetPoint("CENTER", canvas, "BOTTOMLEFT", px, py)
+        dot.tipRating = "Rating: " .. pt.rating
+        dot.tipDate = pt.timestamp and date("%Y-%m-%d %H:%M", pt.timestamp) or nil
+        dot:Show()
     end
+    HideDots(#history + 1)
 
     -- X-axis labels (every ~50th point, up to 5 labels)
     HideLabels(xLabels)

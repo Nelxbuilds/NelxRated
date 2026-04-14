@@ -22,3 +22,6 @@ dist/
 
 # Lua Language Server
 .luarc.json
+
+# Bug reports
+bugs/*
