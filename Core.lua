@@ -116,6 +116,8 @@ function NXR.UpdateCharacterInfo()
     NXR.currentCharKey = key
 
     local classDisplayName, classFileName = UnitClass("player")
+    local _, raceFileName = UnitRace("player")
+    local gender = UnitSex("player")
 
     local specIndex = GetSpecialization()
     local specID, specName
@@ -135,6 +137,8 @@ function NXR.UpdateCharacterInfo()
         char.specName = specName
     end
     char.account          = NelxRatedDB.settings.accountName
+    char.raceFileName     = raceFileName
+    char.gender           = gender
 
     NelxRatedDB.characters[key] = char
     NXR.Debug("UpdateCharacterInfo:", key, classFileName or "?",

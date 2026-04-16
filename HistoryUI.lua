@@ -14,6 +14,10 @@ local MIN_POINTS    = 3
 local DOT_SIZE        = 6
 local GOAL_LINE_COLOR = { 1.0, 0.82, 0.0, 0.8 }
 local GRID_COLOR      = { 0.3, 0.3, 0.3, 0.4 }
+local ENTRY_HEIGHT        = 22
+local MAX_VISIBLE_ENTRIES = 12
+local DROPDOWN_WIDTH      = 240
+local BRACKET_PRIORITY    = { 7, 2, 1, 4 }  -- Solo Shuffle, 3v3, 2v2, Blitz
 
 -- State
 local graphFrame, canvas, placeholder
@@ -25,6 +29,10 @@ local gridLabels = {}
 local goalLine, goalLabel
 local filterCharKey, filterSpecID, filterBracketIndex
 local charButton, specButton, bracketButton
+local charDropdown, charDropdownEntries, charDropdownData, charDropdownOffset
+local ddClickCatcher
+local RefreshCharDropdownEntries  -- forward declaration (used by OnDropdownScroll)
+local UpdateSpecButtonState       -- forward declaration (used by dropdown OnClick)
 
 -- ============================================================================
 -- Object pooling helpers
@@ -293,8 +301,8 @@ local function RefreshGraph()
         end
         goalLabel:SetText("|cffFFD100" .. goalRating .. "|r")
         goalLabel:ClearAllPoints()
-        goalLabel:SetPoint("LEFT", graphFrame, "BOTTOMLEFT",
-            PADDING_LEFT + W + 4, PADDING_BOT + goalY)
+        goalLabel:SetPoint("RIGHT", graphFrame, "BOTTOMRIGHT",
+            -PADDING_RIGHT + 2, PADDING_BOT + goalY)
         goalLabel:Show()
     else
         if goalLine then goalLine:Hide() end
@@ -303,10 +311,186 @@ local function RefreshGraph()
 end
 
 -- ============================================================================
+-- Character dropdown helpers (Epic 7)
+-- ============================================================================
+
+local function HasAnyHistory(char)
+    if not char.ratingHistory then return false end
+    for _, arr in pairs(char.ratingHistory) do
+        if #arr > 0 then return true end
+    end
+    return false
+end
+
+local function BuildSortedCharList()
+    local classSortIndex = {}
+    for i, classID in ipairs(NXR.sortedClassIDs) do
+        local cd = NXR.classData[classID]
+        if cd then classSortIndex[cd.classFileName] = i end
+    end
+
+    local list = {}
+    for key, char in pairs(NelxRatedDB.characters) do
+        if HasAnyHistory(char) then
+            list[#list + 1] = { key = key, char = char }
+        end
+    end
+
+    table.sort(list, function(a, b)
+        local ai = classSortIndex[a.char.classFileName] or 999
+        local bi = classSortIndex[b.char.classFileName] or 999
+        if ai ~= bi then return ai < bi end
+        return (a.char.name or "") < (b.char.name or "")
+    end)
+
+    return list
+end
+
+local function FormatCharDisplay(char)
+    local parts = {}
+    if char.raceFileName and char.gender then
+        local genderStr = char.gender == 2 and "male" or char.gender == 3 and "female" or nil
+        if genderStr then
+            parts[#parts + 1] = "|A:raceicon-" .. strlower(char.raceFileName) .. "-" .. genderStr .. ":14:14|a"
+        end
+    end
+    if char.classFileName then
+        parts[#parts + 1] = "|A:classicon-" .. strlower(char.classFileName) .. ":14:14|a"
+    end
+    local name = char.name .. " - " .. char.realm
+    local cc = char.classFileName and RAID_CLASS_COLORS and RAID_CLASS_COLORS[char.classFileName]
+    if cc and cc.colorStr then
+        name = "|c" .. cc.colorStr .. name .. "|r"
+    end
+    parts[#parts + 1] = name
+    return table.concat(parts, " ")
+end
+
+local function FormatCharButtonLabel(char)
+    if not char then return "Select" end
+    local parts = {}
+    if char.classFileName then
+        parts[#parts + 1] = "|A:classicon-" .. strlower(char.classFileName) .. ":14:14|a"
+    end
+    local name = char.name .. " - " .. char.realm
+    local cc = char.classFileName and RAID_CLASS_COLORS and RAID_CLASS_COLORS[char.classFileName]
+    if cc and cc.colorStr then
+        name = "|c" .. cc.colorStr .. name .. "|r"
+    end
+    parts[#parts + 1] = name
+    return table.concat(parts, " ")
+end
+
+local function AutoSelectBracketForChar(charKey)
+    local char = NelxRatedDB.characters[charKey]
+    if not char or not char.ratingHistory then return end
+
+    for _, bi in ipairs(BRACKET_PRIORITY) do
+        if NXR.PER_SPEC_BRACKETS[bi] then
+            for histKey, arr in pairs(char.ratingHistory) do
+                if type(histKey) == "string" then
+                    local specStr, bracketStr = strsplit(":", histKey)
+                    if tonumber(bracketStr) == bi and #arr > 0 then
+                        filterBracketIndex = bi
+                        filterSpecID = tonumber(specStr)
+                        if specButton then
+                            local specInfo = NXR.specData and NXR.specData[filterSpecID]
+                            specButton.label:SetText(specInfo and specInfo.specName or "Unknown")
+                        end
+                        if bracketButton then
+                            bracketButton.label:SetText(NXR.BRACKET_NAMES[bi] or "Select")
+                        end
+                        return
+                    end
+                end
+            end
+        else
+            local arr = char.ratingHistory[bi]
+            if arr and #arr > 0 then
+                filterBracketIndex = bi
+                filterSpecID = char.specID
+                if specButton then
+                    local specInfo = filterSpecID and NXR.specData and NXR.specData[filterSpecID]
+                    specButton.label:SetText(specInfo and specInfo.specName or "Select")
+                end
+                if bracketButton then
+                    bracketButton.label:SetText(NXR.BRACKET_NAMES[bi] or "Select")
+                end
+                return
+            end
+        end
+    end
+end
+
+local function HideCharDropdown()
+    if charDropdown then charDropdown:Hide() end
+    if ddClickCatcher then ddClickCatcher:Hide() end
+end
+
+local function OnDropdownScroll(_, delta)
+    if not charDropdownData then return end
+    local maxOffset = math.max(0, #charDropdownData - MAX_VISIBLE_ENTRIES)
+    charDropdownOffset = math.max(0, math.min(charDropdownOffset - delta, maxOffset))
+    RefreshCharDropdownEntries()
+end
+
+local function GetOrCreateDropdownEntry(parent, index)
+    if not charDropdownEntries then charDropdownEntries = {} end
+    if charDropdownEntries[index] then return charDropdownEntries[index] end
+
+    local btn = CreateFrame("Button", nil, parent)
+    btn:SetHeight(ENTRY_HEIGHT)
+    btn:SetPoint("TOPLEFT", 2, -(index - 1) * ENTRY_HEIGHT - 2)
+    btn:SetPoint("RIGHT", parent, "RIGHT", -2, 0)
+
+    local hl = btn:CreateTexture(nil, "HIGHLIGHT")
+    hl:SetAllPoints()
+    hl:SetColorTexture(NXR.COLORS.CRIMSON_DIM[1], NXR.COLORS.CRIMSON_DIM[2], NXR.COLORS.CRIMSON_DIM[3], 0.3)
+
+    btn.label = btn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    btn.label:SetPoint("LEFT", 6, 0)
+    btn.label:SetPoint("RIGHT", -6, 0)
+    btn.label:SetJustifyH("LEFT")
+    btn.label:SetWordWrap(false)
+
+    btn:EnableMouseWheel(true)
+    btn:SetScript("OnMouseWheel", OnDropdownScroll)
+
+    charDropdownEntries[index] = btn
+    return btn
+end
+
+RefreshCharDropdownEntries = function()
+    if not charDropdownData or not charDropdown then return end
+    local visibleCount = math.min(#charDropdownData, MAX_VISIBLE_ENTRIES)
+
+    if charDropdownEntries then
+        for _, e in pairs(charDropdownEntries) do e:Hide() end
+    end
+
+    for i = 1, visibleCount do
+        local dataIdx = charDropdownOffset + i
+        if dataIdx > #charDropdownData then break end
+        local data = charDropdownData[dataIdx]
+        local entry = GetOrCreateDropdownEntry(charDropdown, i)
+        entry.label:SetText(data.display)
+        entry:SetScript("OnClick", function()
+            filterCharKey = data.key
+            charButton.label:SetText(FormatCharButtonLabel(data.char))
+            AutoSelectBracketForChar(data.key)
+            UpdateSpecButtonState()
+            RefreshGraph()
+            HideCharDropdown()
+        end)
+        entry:Show()
+    end
+end
+
+-- ============================================================================
 -- Filter controls (Story 6-6)
 -- ============================================================================
 
-local function UpdateSpecButtonState()
+UpdateSpecButtonState = function()
     if NXR.PER_SPEC_BRACKETS[filterBracketIndex] then
         specButton:Enable()
         specButton:SetAlpha(1)
@@ -318,21 +502,25 @@ end
 
 local function SetFilterDefaults()
     filterCharKey = NXR.currentCharKey
-    filterBracketIndex = NXR.BRACKET_SOLO_SHUFFLE
-
     local char = filterCharKey and NelxRatedDB.characters[filterCharKey]
     filterSpecID = char and char.specID
+    filterBracketIndex = NXR.BRACKET_SOLO_SHUFFLE
 
     if charButton then
-        local c = char
-        charButton.label:SetText(c and (c.name .. " - " .. c.realm) or "Select")
+        charButton.label:SetText(FormatCharButtonLabel(char))
     end
-    if specButton then
-        local specInfo = filterSpecID and NXR.specData and NXR.specData[filterSpecID]
-        specButton.label:SetText(specInfo and specInfo.specName or "Select")
-    end
-    if bracketButton then
-        bracketButton.label:SetText(NXR.BRACKET_NAMES[filterBracketIndex] or "Select")
+
+    -- Auto-select best bracket (also updates spec/bracket button labels)
+    if char and char.ratingHistory then
+        AutoSelectBracketForChar(filterCharKey)
+    else
+        if specButton then
+            local specInfo = filterSpecID and NXR.specData and NXR.specData[filterSpecID]
+            specButton.label:SetText(specInfo and specInfo.specName or "Select")
+        end
+        if bracketButton then
+            bracketButton.label:SetText(NXR.BRACKET_NAMES[filterBracketIndex] or "Select")
+        end
     end
 end
 
@@ -348,23 +536,54 @@ local function CreateDropdownButton(parent, labelText, width, yOffset, xOffset)
 end
 
 local function ShowCharacterMenu(btn)
-    MenuUtil.CreateContextMenu(btn, function(_, rootDescription)
-        for key, char in pairs(NelxRatedDB.characters) do
-            local display = char.name .. " - " .. char.realm
-            rootDescription:CreateButton(display, function()
-                filterCharKey = key
-                btn.label:SetText(display)
-                -- Update spec filter for new character
-                local c = NelxRatedDB.characters[key]
-                if c and c.specID then
-                    filterSpecID = c.specID
-                    local specInfo = NXR.specData and NXR.specData[filterSpecID]
-                    specButton.label:SetText(specInfo and specInfo.specName or "Unknown")
-                end
-                RefreshGraph()
-            end)
-        end
-    end)
+    if charDropdown and charDropdown:IsShown() then
+        HideCharDropdown()
+        return
+    end
+
+    local chars = BuildSortedCharList()
+    if #chars == 0 then return end
+
+    charDropdownData = {}
+    for _, item in ipairs(chars) do
+        charDropdownData[#charDropdownData + 1] = {
+            key = item.key,
+            char = item.char,
+            display = FormatCharDisplay(item.char),
+        }
+    end
+    charDropdownOffset = 0
+
+    if not charDropdown then
+        charDropdown = CreateFrame("Frame", nil, btn:GetParent(), "BackdropTemplate")
+        charDropdown:SetBackdrop({
+            bgFile   = "Interface\\Buttons\\WHITE8x8",
+            edgeFile = "Interface\\Buttons\\WHITE8x8",
+            edgeSize = 1,
+        })
+        charDropdown:SetBackdropColor(0.08, 0.08, 0.08, 0.95)
+        charDropdown:SetBackdropBorderColor(unpack(NXR.COLORS.CRIMSON_DIM))
+        charDropdown:SetFrameStrata("DIALOG")
+        charDropdown:SetClipsChildren(true)
+    end
+
+    local visibleCount = math.min(#charDropdownData, MAX_VISIBLE_ENTRIES)
+    charDropdown:SetSize(DROPDOWN_WIDTH, visibleCount * ENTRY_HEIGHT + 4)
+    charDropdown:ClearAllPoints()
+    charDropdown:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+    charDropdown:SetScript("OnMouseWheel", OnDropdownScroll)
+
+    RefreshCharDropdownEntries()
+
+    if not ddClickCatcher then
+        ddClickCatcher = CreateFrame("Button", nil, UIParent)
+        ddClickCatcher:SetAllPoints()
+        ddClickCatcher:SetScript("OnClick", HideCharDropdown)
+    end
+    ddClickCatcher:SetFrameStrata(charDropdown:GetFrameStrata())
+    ddClickCatcher:SetFrameLevel(charDropdown:GetFrameLevel() - 1)
+    ddClickCatcher:Show()
+    charDropdown:Show()
 end
 
 local function ShowSpecMenu(btn)
@@ -449,6 +668,11 @@ function NXR.CreateHistoryPanel(parent)
     local gap = 10
 
     charButton = CreateDropdownButton(panel, "Character", filterWidth, y, PADDING)
+    charButton.label:ClearAllPoints()
+    charButton.label:SetPoint("LEFT", 4, 0)
+    charButton.label:SetPoint("RIGHT", -4, 0)
+    charButton.label:SetJustifyH("LEFT")
+    charButton.label:SetWordWrap(false)
     charButton:SetScript("OnClick", function(self) ShowCharacterMenu(self) end)
 
     specButton = CreateDropdownButton(panel, "Spec", filterWidth, y, PADDING + filterWidth + gap)
@@ -499,6 +723,10 @@ function NXR.CreateHistoryPanel(parent)
         SetFilterDefaults()
         UpdateSpecButtonState()
         RefreshGraph()
+    end)
+
+    panel:SetScript("OnHide", function()
+        HideCharDropdown()
     end)
 
     return panel
