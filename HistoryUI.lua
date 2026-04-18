@@ -27,6 +27,7 @@ local xLabels = {}
 local gridLines = {}
 local gridLabels = {}
 local goalLine, goalLabel, goalLabelBg
+local goalLineFrame, goalLabelFrame
 local filterCharKey, filterSpecID, filterBracketIndex
 local charButton, specButton, bracketButton
 local charDropdown, charDropdownEntries, charDropdownData, charDropdownOffset
@@ -290,7 +291,7 @@ local function RefreshGraph()
     -- Story 6-5: Goal line
     if goalRating then
         if not goalLine then
-            goalLine = graphFrame:CreateLine()
+            goalLine = goalLineFrame:CreateLine()
             goalLine:SetThickness(1)
             goalLine:SetColorTexture(unpack(GOAL_LINE_COLOR))
         end
@@ -300,10 +301,10 @@ local function RefreshGraph()
         goalLine:Show()
 
         if not goalLabel then
-            goalLabel = graphFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+            goalLabel = goalLabelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         end
         if not goalLabelBg then
-            goalLabelBg = graphFrame:CreateTexture(nil, "ARTWORK")
+            goalLabelBg = goalLabelFrame:CreateTexture(nil, "BACKGROUND")
             goalLabelBg:SetColorTexture(0, 0, 0, 0.85)
         end
         goalLabel:SetText("|cffFFD100" .. goalRating .. "|r")
@@ -561,7 +562,7 @@ local function CreateOrGetSimpleDropdown(dropdown, parent)
         })
         dropdown:SetBackdropColor(0.08, 0.08, 0.08, 0.95)
         dropdown:SetBackdropBorderColor(unpack(NXR.COLORS.CRIMSON_DIM))
-        dropdown:SetFrameStrata("DIALOG")
+        dropdown:SetFrameStrata("TOOLTIP")
     end
     return dropdown
 end
@@ -651,7 +652,7 @@ local function ShowCharacterMenu(btn)
         })
         charDropdown:SetBackdropColor(0.08, 0.08, 0.08, 0.95)
         charDropdown:SetBackdropBorderColor(unpack(NXR.COLORS.CRIMSON_DIM))
-        charDropdown:SetFrameStrata("DIALOG")
+        charDropdown:SetFrameStrata("TOOLTIP")
         charDropdown:SetClipsChildren(true)
     end
 
@@ -797,6 +798,15 @@ function NXR.CreateHistoryPanel(parent)
     canvas = CreateFrame("Frame", nil, graphFrame)
     canvas:SetPoint("TOPLEFT", graphFrame, "TOPLEFT", PADDING_LEFT, -PADDING_TOP)
     canvas:SetPoint("BOTTOMRIGHT", graphFrame, "BOTTOMRIGHT", -PADDING_RIGHT, PADDING_BOT)
+
+    -- Goal line/label overlay frames — must sit above canvas (child frames always render above parent)
+    goalLineFrame = CreateFrame("Frame", nil, graphFrame)
+    goalLineFrame:SetAllPoints(graphFrame)
+    goalLineFrame:SetFrameLevel(canvas:GetFrameLevel() + 10)
+
+    goalLabelFrame = CreateFrame("Frame", nil, graphFrame)
+    goalLabelFrame:SetAllPoints(graphFrame)
+    goalLabelFrame:SetFrameLevel(canvas:GetFrameLevel() + 20)
 
     -- Axis border lines
     local axisL = graphFrame:CreateTexture(nil, "ARTWORK")

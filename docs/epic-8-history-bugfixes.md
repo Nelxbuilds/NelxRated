@@ -95,3 +95,86 @@ Fix visual bugs and inconsistencies on the History tab: goal label readability, 
 
 - Changing icons outside History tab (overlay, challenges use `classicon-*` in different context)
 - Adding spec icons to character dropdown
+
+---
+
+## Story 8-5 — Fix Goal Label Strikethrough (Lines Render Through Background)
+
+**Goal**: The `goalLabelBg` background texture does not block lines from passing through the goal label because the bg is at `"ARTWORK"` draw layer while lines render above it. Fix the draw order so the background actually occludes both the goal line and data lines.
+
+**Root Cause**:
+
+Two separate problems stack:
+
+1. `goalLine` is created with `graphFrame:CreateLine()` — defaults to `"OVERLAY"` layer. `goalLabelBg` is `"ARTWORK"` on the same frame. OVERLAY renders above ARTWORK → goal line passes through bg.
+2. Data lines live on `canvas` (a child Frame of `graphFrame`). Child frames always render above parent frame content regardless of draw layer → canvas content (data lines, dots) always passes through any texture on `graphFrame`.
+
+**Desired Layer Order (back to front)**:
+
+1. `graphFrame` background / axis lines
+2. `canvas` content — grid lines, data lines, dots
+3. `goalLine` — renders above data
+4. `goalLabelBg` — occludes goal line at label position
+5. `goalLabel` text — on top of bg
+
+**Acceptance Criteria**:
+
+- [x] `goalLine` remains on `graphFrame` at `"OVERLAY"` draw layer — renders above canvas content (child frame) because goal line is on a dedicated sub-frame above canvas; OR `goalLine` is moved to a sub-frame with frame level between canvas and the label frame so it renders above data lines
+- [x] `goalLabel` and `goalLabelBg` live in a dedicated `goalLabelFrame = CreateFrame("Frame", nil, graphFrame)` with frame level higher than both `canvas` and the goal line's frame — guarantees label+bg sit on top of everything
+- [x] Within `goalLabelFrame`: bg texture at `"BACKGROUND"`, label fontstring at `"OVERLAY"` — label text renders on top of bg
+- [x] `goalLabelFrame` sized to fill `graphFrame` (simplest: `SetAllPoints(graphFrame)`) — zero visual impact, positions of label/bg still driven by anchor points to `graphFrame`
+- [x] `goalLabel` anchored to `graphFrame` (via `goalLabelFrame` which fills graphFrame — same anchor math as current)
+- [x] `goalLabelBg` anchored to `goalLabel` as before (TOPLEFT/BOTTOMRIGHT with ±2px insets)
+- [x] Show/hide sync of bg, label, and label frame unchanged — hide all three when no goal
+- [x] Goal line still visually appears above data lines and dots
+
+**Technical Hints**:
+
+- Create `goalLabelFrame` after `canvas` is created (so `canvas:GetFrameLevel()` is known)
+- Frame level: `goalLabelFrame:SetFrameLevel(canvas:GetFrameLevel() + 20)`
+- If `goalLine` still renders behind canvas content, move it to a separate `goalLineFrame` at `canvas:GetFrameLevel() + 10` and draw the line there
+- `goalLabel = goalLabelFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")`
+- `goalLabelBg = goalLabelFrame:CreateTexture(nil, "BACKGROUND")`
+
+---
+
+## Story 8-6 — Fix Dropdown Z-Order (Renders Behind Graph Dots)
+
+**Goal**: All three history dropdowns (Character, Spec, Bracket) occasionally render behind the graph dot frames because both use `DIALOG` strata and dot frames can have higher frame level than the dropdown frame. Fix by elevating dropdown strata above `DIALOG`.
+
+**Root Cause**:
+
+- Dot frames: `CreateFrame("Frame", nil, canvas)` + `SetFrameStrata("DIALOG")` — inherits canvas frame level + offset
+- Dropdowns: `SetFrameStrata("DIALOG")` — parented to filter row or button parent, lower base frame level
+- Within same strata, highest frame level wins → dots win → dropdown hidden behind dots
+
+**Acceptance Criteria**:
+
+- [x] All three dropdown frames (`charDropdown`, `specDropdown`, `bracketDropdown`) use `SetFrameStrata("TOOLTIP")` instead of `"DIALOG"`
+- [x] `CreateOrGetSimpleDropdown()` sets strata to `"TOOLTIP"` (line 564)
+- [x] `charDropdown` creation block sets strata to `"TOOLTIP"` (line 654)
+- [x] `ddClickCatcher` strata updated to match dropdown strata (`"TOOLTIP"`) and level set to `dropdown:GetFrameLevel() - 1` — existing logic at lines 619-620 and 671-672 already handles this dynamically, no change needed there
+- [x] Dropdowns render visibly above graph area (dots, lines) when open
+- [x] No other behavioral changes (click-to-close, entry selection, scroll) affected
+
+---
+
+## Story 8-7 — Align Left Padding Between Selected Button Label and Dropdown Entries
+
+**Deferred** — minor visual polish, low risk of regression on other button usages. Revisit after 8-5 and 8-6 ship.
+
+**Goal**: The selected character button label uses 4px left padding while dropdown list entries use 6px. Unify so text doesn't jump horizontally when opening the dropdown.
+
+**Root Cause**:
+
+- `charButton.label` overrides to `LEFT, 4, 0` (line 777)
+- Dropdown entries use `LEFT, 6, 0` (lines 466, 582)
+- Spec/bracket buttons use `NXR.CreateNXRButton` — internal padding needs audit before changing
+
+**Acceptance Criteria**:
+
+- [ ] Audit `NXR.CreateNXRButton` label anchor before any change — confirm spec/bracket button labels are not shared with other UI elements
+- [ ] `charButton.label:SetPoint("LEFT", 4, 0)` → `6` (line 777)
+- [ ] Spec and bracket button label left offset also aligned to 6px if safe
+- [ ] Dropdown entries unchanged (lines 466, 582)
+- [ ] No regression on other buttons using `NXR.CreateNXRButton`
