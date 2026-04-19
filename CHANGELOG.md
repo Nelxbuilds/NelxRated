@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.1.0] -- 2026-04-19
+
+### Changed
+- History tab improvements: race/gender icons in character dropdown, class-colored and class-ordered entries, scrollable dropdown, auto-bracket selection on character change
+- History tab bugfixes: goal label background, dropdown style unification, z-order fixes, dropdown rendering above graph
+
 ## [1.0.1] -- 2026-04-17
 
 ### Fixed
