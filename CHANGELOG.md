@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.0] -- 2026-04-24
+
+### Added
+- New setting "Hide unrated rows" — hides specs/classes with no rating data from the overlay; overlay auto-hides if all rows are filtered
+
 ## [1.2.0] -- 2026-04-24
 
 ### Added
