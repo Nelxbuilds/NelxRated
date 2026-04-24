@@ -41,6 +41,14 @@ local function SerializeCharacterLines(lines)
             end
         end
 
+        if char.ratingHistory then
+            for historyKey, entries in pairs(char.ratingHistory) do
+                for idx, entry in ipairs(entries) do
+                    table.insert(lines, "history_" .. historyKey .. "_" .. idx .. "=" .. (entry.rating or 0) .. "," .. (entry.timestamp or 0))
+                end
+            end
+        end
+
         table.insert(lines, "[END_CHAR]")
     end
     table.insert(lines, "[END_CHARS]")
@@ -119,27 +127,37 @@ local function ParseCharacterBlock(lines, startIdx)
         end
         local k, v = line:match("^(.-)=(.*)$")
         if k and v then
-            local specID, bi, field = k:match("^specbracket_(%d+)_(%d+)_(%a+)$")
-            if specID and bi and field then
-                specID = tonumber(specID)
-                bi = tonumber(bi)
-                current.specBrackets[specID] = current.specBrackets[specID] or {}
-                current.specBrackets[specID][bi] = current.specBrackets[specID][bi] or {}
-                current.specBrackets[specID][bi][field] = tonumber(v) or 0
-                current.specBrackets[specID][bi].updatedAt = current.specBrackets[specID][bi].updatedAt or time()
+            local histKey, idx = k:match("^history_(.+)_(%d+)$")
+            if histKey and idx then
+                local rating, ts = v:match("^(%d+),(%d+)$")
+                if rating and ts then
+                    current.ratingHistory = current.ratingHistory or {}
+                    current.ratingHistory[histKey] = current.ratingHistory[histKey] or {}
+                    current.ratingHistory[histKey][tonumber(idx)] = { rating = tonumber(rating), timestamp = tonumber(ts) }
+                end
             else
-                local bracketIdx, bracketField = k:match("^bracket_(%d+)_(%a+)$")
-                if bracketIdx and bracketField then
-                    bracketIdx = tonumber(bracketIdx)
-                    current.brackets[bracketIdx] = current.brackets[bracketIdx] or {}
-                    current.brackets[bracketIdx][bracketField] = tonumber(v) or 0
-                    current.brackets[bracketIdx].updatedAt = current.brackets[bracketIdx].updatedAt or time()
-                elseif k == "specID" then
-                    current[k] = tonumber(v)
-                elseif k == "key" then
-                    current.key = v
+                local specID, bi, field = k:match("^specbracket_(%d+)_(%d+)_(%a+)$")
+                if specID and bi and field then
+                    specID = tonumber(specID)
+                    bi = tonumber(bi)
+                    current.specBrackets[specID] = current.specBrackets[specID] or {}
+                    current.specBrackets[specID][bi] = current.specBrackets[specID][bi] or {}
+                    current.specBrackets[specID][bi][field] = tonumber(v) or 0
+                    current.specBrackets[specID][bi].updatedAt = current.specBrackets[specID][bi].updatedAt or time()
                 else
-                    current[k] = v
+                    local bracketIdx, bracketField = k:match("^bracket_(%d+)_(%a+)$")
+                    if bracketIdx and bracketField then
+                        bracketIdx = tonumber(bracketIdx)
+                        current.brackets[bracketIdx] = current.brackets[bracketIdx] or {}
+                        current.brackets[bracketIdx][bracketField] = tonumber(v) or 0
+                        current.brackets[bracketIdx].updatedAt = current.brackets[bracketIdx].updatedAt or time()
+                    elseif k == "specID" then
+                        current[k] = tonumber(v)
+                    elseif k == "key" then
+                        current.key = v
+                    else
+                        current[k] = v
+                    end
                 end
             end
         end
