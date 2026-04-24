@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.2.0] -- 2026-04-24
+
+### Added
+- Overlay polish: multi-column layout, checkmark replaces rating text at 100%, wider rating padding, current-character indicator
+- Full data export/import covering characters, challenges, and settings
+
+### Fixed
+- Disable role grouping for class challenges
+- Checkmark centering, settings scroll, role columns, melee/ranged split
+- Typo in README
+
 ## [1.1.0] -- 2026-04-19
 
 ### Changed

@@ -8,10 +8,10 @@ Track your arena and battleground ratings across multiple characters and account
 
 - **Rating Tracking** — Automatically captures ratings and MMR for Solo Shuffle, 2v2, 3v3, and Blitz Battleground
 - **Challenge System** — Set rating goals by spec or class, track progress across brackets; first challenge auto-activates
-- **Overlay** — Movable frame showing color-coded progress toward your active challenge (orange at 80%, yellow at 90%, checkmark at 100%)
+- **Overlay** — Movable frame showing color-coded progress toward your active challenge (orange at 80%, yellow at 90%, checkmark at 100%) with multi-column layout for large challenges
 - **Rating History** — Graph visualization of rating progression per character/spec/bracket with goal line overlay and class color option
 - **Multi-Character** — Track all your characters in one place, see your best-rated character per spec
-- **Multi-Account** — Import/Export ratings between WoW accounts without overwriting existing data
+- **Multi-Account** — Import/Export characters, challenges, settings, and ratings between WoW accounts without overwriting existing data
 - **Customizable** — Adjustable opacity (separate settings for arena/outside), scale slider, lockable position, tooltips with character details
 
 ## Usage
