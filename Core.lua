@@ -88,11 +88,12 @@ end
 local function InitDB()
     NelxRatedDB = NelxRatedDB or {}
 
-    NelxRatedDB.settings        = NelxRatedDB.settings or {}
-    NelxRatedDB.characters      = NelxRatedDB.characters or {}
-    NelxRatedDB.challenges      = NelxRatedDB.challenges or {}
-    NelxRatedDB.overlayPosition = NelxRatedDB.overlayPosition or {}
-    NelxRatedDB.schemaVersion   = NelxRatedDB.schemaVersion or 0
+    NelxRatedDB.settings              = NelxRatedDB.settings or {}
+    NelxRatedDB.characters            = NelxRatedDB.characters or {}
+    NelxRatedDB.challenges            = NelxRatedDB.challenges or {}
+    NelxRatedDB.overlayPosition       = NelxRatedDB.overlayPosition or {}
+    NelxRatedDB.schemaVersion         = NelxRatedDB.schemaVersion or 0
+    NelxRatedDB.deletedChallengeUIDs  = NelxRatedDB.deletedChallengeUIDs or {}
 
     RunMigrations(NelxRatedDB)
     NXR.Debug("InitDB complete — schema", NelxRatedDB.schemaVersion,

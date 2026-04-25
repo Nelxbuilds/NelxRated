@@ -126,8 +126,12 @@ function NXR.AddChallenge(data)
         brackets   = data.brackets or {},
         specs      = data.specs or {},
         classes    = data.classes or {},
-        active     = isFirst,
     }
+    if data.active ~= nil then
+        c.active = data.active
+    else
+        c.active = isFirst
+    end
     table.insert(NelxRatedDB.challenges, c)
     NXR.Debug("AddChallenge: id=" .. c.id, "'" .. c.name .. "'",
         "goal=" .. c.goalRating,
@@ -145,6 +149,10 @@ function NXR.RemoveChallenge(id)
     for i, c in ipairs(NelxRatedDB.challenges) do
         if c.id == id then
             wasActive = c.active
+            if c.uid then
+                NelxRatedDB.deletedChallengeUIDs = NelxRatedDB.deletedChallengeUIDs or {}
+                NelxRatedDB.deletedChallengeUIDs[c.uid] = true
+            end
             table.remove(NelxRatedDB.challenges, i)
             break
         end

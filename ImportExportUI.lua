@@ -302,20 +302,82 @@ local function ValidateCharacter(key, char)
     return true
 end
 
+local HISTORY_MERGE_CAP = 250
+
+local function MergeCharacterData(existing, imported)
+    -- Merge non-per-spec brackets (keep newer by updatedAt)
+    if imported.brackets then
+        existing.brackets = existing.brackets or {}
+        for bi, data in pairs(imported.brackets) do
+            local cur = existing.brackets[bi]
+            if not cur or (data.updatedAt or 0) > (cur.updatedAt or 0) then
+                existing.brackets[bi] = data
+            end
+        end
+    end
+
+    -- Merge per-spec brackets (keep newer by updatedAt)
+    if imported.specBrackets then
+        existing.specBrackets = existing.specBrackets or {}
+        for specID, brackets in pairs(imported.specBrackets) do
+            existing.specBrackets[specID] = existing.specBrackets[specID] or {}
+            for bi, data in pairs(brackets) do
+                local cur = existing.specBrackets[specID][bi]
+                if not cur or (data.updatedAt or 0) > (cur.updatedAt or 0) then
+                    existing.specBrackets[specID][bi] = data
+                end
+            end
+        end
+    end
+
+    -- Merge rating history: union by timestamp, sort, cap
+    if imported.ratingHistory then
+        existing.ratingHistory = existing.ratingHistory or {}
+        for histKey, entries in pairs(imported.ratingHistory) do
+            if not existing.ratingHistory[histKey] then
+                existing.ratingHistory[histKey] = entries
+            else
+                local seen = {}
+                local merged = {}
+                for _, e in ipairs(existing.ratingHistory[histKey]) do
+                    if not seen[e.timestamp] then
+                        seen[e.timestamp] = true
+                        table.insert(merged, e)
+                    end
+                end
+                for _, e in ipairs(entries) do
+                    if not seen[e.timestamp] then
+                        seen[e.timestamp] = true
+                        table.insert(merged, e)
+                    end
+                end
+                table.sort(merged, function(a, b) return a.timestamp < b.timestamp end)
+                if #merged > HISTORY_MERGE_CAP then
+                    local trim = #merged - HISTORY_MERGE_CAP
+                    for i = 1, HISTORY_MERGE_CAP do merged[i] = merged[i + trim] end
+                    for i = HISTORY_MERGE_CAP + 1, HISTORY_MERGE_CAP + trim do merged[i] = nil end
+                end
+                existing.ratingHistory[histKey] = merged
+            end
+        end
+    end
+end
+
 local function MergeCharacters(imported)
-    local added, skipped = 0, 0
+    local added, updated, skipped = 0, 0, 0
     for key, char in pairs(imported) do
         if not ValidateCharacter(key, char) then
             NXR.Debug("Import: skipping invalid entry:", tostring(key))
             skipped = skipped + 1
         elseif NelxRatedDB.characters[key] then
-            skipped = skipped + 1
+            MergeCharacterData(NelxRatedDB.characters[key], char)
+            updated = updated + 1
         else
             NelxRatedDB.characters[key] = char
             added = added + 1
         end
     end
-    return added, skipped
+    return added, updated, skipped
 end
 
 local function MergeChallenges(imported)
@@ -324,13 +386,12 @@ local function MergeChallenges(imported)
     for _, c in ipairs(NelxRatedDB.challenges) do
         if c.uid then existingUIDs[c.uid] = true end
     end
+    local deletedUIDs = NelxRatedDB.deletedChallengeUIDs or {}
 
     for _, c in ipairs(imported) do
-        if c.uid and existingUIDs[c.uid] then
+        if c.uid and (existingUIDs[c.uid] or deletedUIDs[c.uid]) then
             skipped = skipped + 1
         else
-            -- Add as inactive to preserve single-active rule
-            c.active = false
             NXR.AddChallenge({
                 uid        = c.uid,
                 name       = c.name,
@@ -338,6 +399,7 @@ local function MergeChallenges(imported)
                 brackets   = c.brackets or {},
                 specs      = c.specs or {},
                 classes    = c.classes or {},
+                active     = false,
             })
             added = added + 1
         end
@@ -487,8 +549,8 @@ function NXR.CreateImportExportPanel(parent)
 
         -- Characters
         if data.characters then
-            local added, skipped = MergeCharacters(data.characters)
-            table.insert(parts, added .. " char(s) added, " .. skipped .. " skipped")
+            local added, updated, skipped = MergeCharacters(data.characters)
+            table.insert(parts, added .. " char(s) added, " .. updated .. " updated, " .. skipped .. " skipped")
         end
 
         -- Challenges
