@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.3.1] -- 2026-04-25
+
+### Fixed
+- Overlay rows for old specs no longer disappear after respeccing; historical specBrackets data is now matched even when the character has switched to a different spec
+- Characters tab now shows per-spec ratings for all specs with data, not only the currently active spec
+
 ## [1.3.0] -- 2026-04-24
 
 ### Added
