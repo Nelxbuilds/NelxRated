@@ -10,12 +10,13 @@ local overlayFrame
 local rowPool = {}
 local SavePosition
 
-local ROW_HEIGHT  = 22
-local ICON_SIZE   = 20
-local PADDING     = 6
-local MIN_WIDTH   = 50
-local BAR_HEIGHT  = 14
-local BAR_PADDING = 4
+local ROW_HEIGHT   = 22
+local ICON_SIZE    = 20
+local PADDING      = 6
+local MIN_WIDTH    = 50
+local BAR_HEIGHT   = 14
+local BAR_PADDING  = 4
+local TITLE_HEIGHT = 16
 
 -- ============================================================================
 -- Backdrop definition (Story 4-1)
@@ -508,7 +509,7 @@ local function CalcChallengeProgress(challenge)
     return completed, total
 end
 
-local function RefreshProgressBar(contentWidth)
+local function RefreshProgressBar(contentWidth, titleOffset)
     local pb = overlayFrame and overlayFrame.progressBar
     if not pb then return end
 
@@ -525,7 +526,7 @@ local function RefreshProgressBar(contentWidth)
     end
 
     pb:ClearAllPoints()
-    pb:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", PADDING, -PADDING)
+    pb:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", PADDING, -(PADDING + (titleOffset or 0)))
     pb:SetWidth(contentWidth)
     pb:Show()
 
@@ -750,6 +751,19 @@ function NXR.RefreshOverlay()
 
     local classMode = IsClassChallenge(challenge)
 
+    -- Title offset
+    local titleOffset = 0
+    if NelxRatedDB.settings.showOverlayTitle and challenge.name and challenge.name ~= "" then
+        overlayFrame.titleText:SetText(challenge.name)
+        overlayFrame.titleText:ClearAllPoints()
+        overlayFrame.titleText:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", PADDING, -PADDING)
+        overlayFrame.titleText:Show()
+        titleOffset = TITLE_HEIGHT + BAR_PADDING
+    else
+        overlayFrame.titleText:Hide()
+    end
+
+    -- Bar offset
     local barOffset = 0
     if NelxRatedDB.settings.showOverlayProgressBar then
         local _, total = CalcChallengeProgress(challenge)
@@ -757,6 +771,8 @@ function NXR.RefreshOverlay()
             barOffset = BAR_HEIGHT + BAR_PADDING
         end
     end
+
+    local topOffset = titleOffset + barOffset
 
     NXR.Debug("RefreshOverlay: challenge='" .. challenge.name .. "'",
         "goal=" .. tostring(challenge.goalRating),
@@ -912,7 +928,7 @@ function NXR.RefreshOverlay()
 
             -- Header on first column of group
             gd.header:ClearAllPoints()
-            gd.header:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", colOffset * colWidth + 4, -PADDING - barOffset + 2)
+            gd.header:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", colOffset * colWidth + 4, -PADDING - topOffset + 2)
             gd.header:Show()
 
             -- Offset rows below header
@@ -924,7 +940,7 @@ function NXR.RefreshOverlay()
                 local localRow = entryIdx % rowsPerGCol
 
                 local xOff = (colOffset + localCol) * colWidth
-                local yOff = -PADDING - barOffset - headerOffset - localRow * ROW_HEIGHT
+                local yOff = -PADDING - topOffset - headerOffset - localRow * ROW_HEIGHT
 
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", xOff, yOff)
@@ -943,10 +959,10 @@ function NXR.RefreshOverlay()
             colOffset = colOffset + gCols
         end
 
-        local totalHeight = PADDING * 2 + tallestCol + barOffset
+        local totalHeight = PADDING * 2 + tallestCol + topOffset
         local totalWidth = colOffset * colWidth
         overlayFrame:SetSize(totalWidth, totalHeight)
-        RefreshProgressBar(totalWidth - PADDING * 2)
+        RefreshProgressBar(totalWidth - PADDING * 2, titleOffset)
     else
         -- ============================================================
         -- FLAT LAYOUT: distribute all entries across columns
@@ -971,7 +987,7 @@ function NXR.RefreshOverlay()
             local rowInCol = itemIdx % rowsPerCol
 
             local xOff = colIdx * colWidth
-            local yOff = -PADDING - barOffset - rowInCol * ROW_HEIGHT
+            local yOff = -PADDING - topOffset - rowInCol * ROW_HEIGHT
 
             row:ClearAllPoints()
             row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", xOff, yOff)
@@ -979,10 +995,10 @@ function NXR.RefreshOverlay()
             row:Show()
         end
 
-        local totalHeight = PADDING * 2 + rowsPerCol * ROW_HEIGHT + barOffset
+        local totalHeight = PADDING * 2 + rowsPerCol * ROW_HEIGHT + topOffset
         local totalWidth = effectiveCols * colWidth
         overlayFrame:SetSize(totalWidth, totalHeight)
-        RefreshProgressBar(totalWidth - PADDING * 2)
+        RefreshProgressBar(totalWidth - PADDING * 2, titleOffset)
     end
 
     -- Re-apply opacity and mouse state
@@ -1067,6 +1083,13 @@ local function CreateOverlayFrame()
     pbText:SetJustifyV("MIDDLE")
     pbText:SetTextColor(1, 1, 1)
     overlayFrame.progressBarText = pbText
+
+    -- Challenge title fontstring
+    local titleText = overlayFrame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    titleText:SetJustifyH("LEFT")
+    titleText:SetTextColor(0.96, 0.92, 0.90)
+    titleText:Hide()
+    overlayFrame.titleText = titleText
 
     -- Apply scale
     ApplyScale()

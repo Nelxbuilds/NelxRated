@@ -67,6 +67,7 @@ local SETTINGS_DEFAULTS = {
     overlayGroupByRole       = false,
     hideZeroRatingRows       = false,
     showOverlayProgressBar   = false,
+    showOverlayTitle         = false,
     chartColor               = "default",
 }
 
