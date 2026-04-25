@@ -11,6 +11,7 @@ Track your arena and battleground ratings across multiple characters and account
 - **Overlay** — Movable frame showing challenge title, color-coded spec rows (orange at 80%, yellow at 90%, checkmark at 100%), opt-in progress bar, manual spec/class completion marking, multi-column layout, role grouping, and gold indicator for your currently logged-in spec
 - **Rating History** — Graph visualization of rating progression per character/spec/bracket with goal line overlay and class color option
 - **Multi-Character** — Track all your characters in one place, see your best-rated character per spec
+- **Party Sync** — One-button bidirectional sync with other NelxRated accounts in your party; merges character rating data without overwriting existing entries
 - **Multi-Account** — Import/Export characters, challenges, settings, and ratings between WoW accounts without overwriting existing data
 - **Customizable** — Adjustable opacity (separate settings for arena/outside), scale slider, lockable position, hide unrated rows, tooltips with character details; discoverable via WoW's built-in addon settings panel
 
@@ -21,6 +22,7 @@ Track your arena and battleground ratings across multiple characters and account
 | `/nxr` | Open the main frame |
 | `/nxr overlay` | Toggle overlay visibility |
 | `/nxr lock` / `/nxr unlock` | Lock or unlock overlay position |
+| `/nxr sync` | Sync character data with other NelxRated accounts in party |
 | `/nxr help` | Show all commands |
 
 ## Main Frame Tabs

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.5.0] -- 2026-04-26
+
+### Added
+- Party Sync: bidirectional one-button sync of character rating data with other NelxRated accounts in party via `/nxr sync` and Settings tab button; merges using `updatedAt` timestamp, never overwrites
+
 ## [1.4.0] -- 2026-04-26
 
 ### Added
