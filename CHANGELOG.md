@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2] -- 2026-04-25
+
+### Fixed
+- Import/Export: MergeCharacters now merges brackets, specBrackets, and ratingHistory into existing characters instead of skipping them; fixes other-spec data being lost on cross-account import
+- Import/Export: MergeChallenges respects deleted challenge tombstones so user-deleted challenges no longer resurrect on re-import
+- Import/Export: RemoveChallenge records tombstones; AddChallenge respects explicit active flag to prevent imported challenges from silently activating
+
 ## [1.3.1] -- 2026-04-25
 
 ### Fixed
