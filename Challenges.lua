@@ -196,6 +196,48 @@ function NXR.GetActiveChallenge()
 end
 
 -- ============================================================================
+-- Manual spec/class completion (Story: Manual Spec Completion)
+-- ============================================================================
+
+function NXR.SetSpecCompleted(challengeID, specID, completed)
+    for _, c in ipairs(NelxRatedDB.challenges) do
+        if c.id == challengeID then
+            c.completedSpecs = c.completedSpecs or {}
+            c.completedSpecs[specID] = completed and true or nil
+            return
+        end
+    end
+end
+
+function NXR.IsSpecCompleted(challengeID, specID)
+    for _, c in ipairs(NelxRatedDB.challenges) do
+        if c.id == challengeID then
+            return c.completedSpecs and c.completedSpecs[specID] == true
+        end
+    end
+    return false
+end
+
+function NXR.SetClassCompleted(challengeID, classID, completed)
+    for _, c in ipairs(NelxRatedDB.challenges) do
+        if c.id == challengeID then
+            c.completedClasses = c.completedClasses or {}
+            c.completedClasses[classID] = completed and true or nil
+            return
+        end
+    end
+end
+
+function NXR.IsClassCompleted(challengeID, classID)
+    for _, c in ipairs(NelxRatedDB.challenges) do
+        if c.id == challengeID then
+            return c.completedClasses and c.completedClasses[classID] == true
+        end
+    end
+    return false
+end
+
+-- ============================================================================
 -- Initialization (called from Core.lua ADDON_LOADED)
 -- ============================================================================
 

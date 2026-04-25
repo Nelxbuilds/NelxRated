@@ -263,6 +263,39 @@ local function CreateRow(parent, index)
         GameTooltip:Hide()
     end)
 
+    -- Right-click: mark/unmark complete
+    row:SetScript("OnMouseUp", function(self, button)
+        if button ~= "RightButton" or not self.entryData then return end
+        local ed = self.entryData
+        local isCompleted
+        if ed.classMode then
+            isCompleted = NXR.IsClassCompleted(ed.challengeID, ed.classID)
+        else
+            isCompleted = NXR.IsSpecCompleted(ed.challengeID, ed.specID)
+        end
+        MenuUtil.CreateContextMenu(self, function(owner, rootDescription)
+            if isCompleted then
+                rootDescription:CreateButton("Unmark Complete", function()
+                    if ed.classMode then
+                        NXR.SetClassCompleted(ed.challengeID, ed.classID, false)
+                    else
+                        NXR.SetSpecCompleted(ed.challengeID, ed.specID, false)
+                    end
+                    NXR.RefreshOverlay()
+                end)
+            else
+                rootDescription:CreateButton("Mark Complete", function()
+                    if ed.classMode then
+                        NXR.SetClassCompleted(ed.challengeID, ed.classID, true)
+                    else
+                        NXR.SetSpecCompleted(ed.challengeID, ed.specID, true)
+                    end
+                    NXR.RefreshOverlay()
+                end)
+            end
+        end)
+    end)
+
     -- Forward drag events to the overlay so rows don't block dragging
     row:RegisterForDrag("LeftButton")
     row:SetScript("OnDragStart", function()
@@ -465,7 +498,20 @@ local function IsLoggedInRow(specID, classID, classMode)
 end
 
 local function PopulateRow(row, bestMatch, challenge, specID, classID, classMode)
-    if bestMatch then
+    -- Manual completion overrides all rating display logic
+    local isManuallyCompleted = false
+    if challenge and challenge.id then
+        if classMode and classID then
+            isManuallyCompleted = NXR.IsClassCompleted(challenge.id, classID)
+        elseif specID then
+            isManuallyCompleted = NXR.IsSpecCompleted(challenge.id, specID)
+        end
+    end
+
+    if isManuallyCompleted then
+        row.rating:SetText("")
+        row.checkmark:Show()
+    elseif bestMatch then
         local color, showCheck = GetProgressColor(bestMatch.rating, challenge.goalRating or 0)
         if showCheck then
             row.rating:SetText("")
@@ -691,6 +737,14 @@ function NXR.RefreshOverlay()
         -- Populate rating/checkmark/glow
         PopulateRow(row, entry.bestMatch, challenge,
             entry.specID, entry.classID, classMode)
+
+        -- Store entry data for right-click context menu
+        row.entryData = {
+            challengeID = challenge.id,
+            specID      = entry.specID,
+            classID     = entry.classID,
+            classMode   = classMode,
+        }
 
         -- Tooltip
         if entry.type == "class" then
