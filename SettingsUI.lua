@@ -13,6 +13,7 @@ local scaleSlider, scaleValueText
 local columnsSlider, columnsValueText
 local groupByRoleCheckbox
 local hideZeroCheckbox
+local progressBarCheckbox
 local bgCheckbox
 local lockCheckbox
 local overlayToggleBtn
@@ -214,6 +215,24 @@ function NXR.CreateSettingsPanel(parent)
     y = y + 34
 
     -- ----------------------------------------------------------------
+    -- Show progress bar on overlay
+    -- ----------------------------------------------------------------
+    progressBarCheckbox = CreateFrame("CheckButton", nil, p, "UICheckButtonTemplate")
+    progressBarCheckbox:SetSize(26, 26)
+    progressBarCheckbox:SetPoint("TOPLEFT", 8, -y)
+
+    local progressBarLabel = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    progressBarLabel:SetPoint("LEFT", progressBarCheckbox, "RIGHT", 4, 0)
+    progressBarLabel:SetText("Show progress bar on overlay")
+
+    progressBarCheckbox:SetScript("OnClick", function(self)
+        NelxRatedDB.settings.showOverlayProgressBar = self:GetChecked()
+        NXR.RefreshOverlay()
+    end)
+
+    y = y + 34
+
+    -- ----------------------------------------------------------------
     -- Show overlay background
     -- ----------------------------------------------------------------
     bgCheckbox = CreateFrame("CheckButton", nil, p, "UICheckButtonTemplate")
@@ -326,6 +345,7 @@ function NXR.CreateSettingsPanel(parent)
         columnsSlider:SetValue(NelxRatedDB.settings.overlayColumns or 1)
         groupByRoleCheckbox:SetChecked(NelxRatedDB.settings.overlayGroupByRole or false)
         hideZeroCheckbox:SetChecked(NelxRatedDB.settings.hideZeroRatingRows or false)
+        progressBarCheckbox:SetChecked(NelxRatedDB.settings.showOverlayProgressBar or false)
         bgCheckbox:SetChecked(NelxRatedDB.settings.showOverlayBackground)
         lockCheckbox:SetChecked(NelxRatedDB.settings.overlayLocked or false)
         if NelxRatedDB.settings.showOverlay then

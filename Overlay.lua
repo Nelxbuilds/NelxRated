@@ -10,10 +10,12 @@ local overlayFrame
 local rowPool = {}
 local SavePosition
 
-local ROW_HEIGHT = 22
-local ICON_SIZE  = 20
-local PADDING    = 6
-local MIN_WIDTH  = 50
+local ROW_HEIGHT  = 22
+local ICON_SIZE   = 20
+local PADDING     = 6
+local MIN_WIDTH   = 50
+local BAR_HEIGHT  = 14
+local BAR_PADDING = 4
 
 -- ============================================================================
 -- Backdrop definition (Story 4-1)
@@ -476,8 +478,68 @@ local function GetSortedSpecIDs(challenge)
 end
 
 -- ============================================================================
--- Refresh overlay (Story 4-2, 4-3, 4-4)
+-- Challenge progress calculation (Story: overlay progress bar)
 -- ============================================================================
+
+local function CalcChallengeProgress(challenge)
+    local completed = 0
+    local total = 0
+    local goalRating = challenge.goalRating or 0
+    local classMode = IsClassChallenge(challenge)
+
+    if classMode then
+        for classID in pairs(challenge.classes) do
+            total = total + 1
+            local matches = FindMatchingCharactersForClass(classID, challenge)
+            if matches[1] and matches[1].rating >= goalRating then
+                completed = completed + 1
+            end
+        end
+    else
+        for specID in pairs(challenge.specs) do
+            total = total + 1
+            local matches = FindMatchingCharactersForSpec(specID, challenge)
+            if matches[1] and matches[1].rating >= goalRating then
+                completed = completed + 1
+            end
+        end
+    end
+
+    return completed, total
+end
+
+local function RefreshProgressBar(contentWidth)
+    local pb = overlayFrame and overlayFrame.progressBar
+    if not pb then return end
+
+    local challenge = NXR.GetActiveChallenge()
+    if not NelxRatedDB.settings.showOverlayProgressBar or not challenge then
+        pb:Hide()
+        return
+    end
+
+    local completed, total = CalcChallengeProgress(challenge)
+    if total == 0 then
+        pb:Hide()
+        return
+    end
+
+    pb:ClearAllPoints()
+    pb:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", PADDING, -PADDING)
+    pb:SetWidth(contentWidth)
+    pb:Show()
+
+    local fillW = math.floor(contentWidth * completed / total)
+    if fillW > 0 then
+        overlayFrame.progressBarFill:SetWidth(fillW)
+        overlayFrame.progressBarFill:Show()
+    else
+        overlayFrame.progressBarFill:Hide()
+    end
+
+    local pct = math.floor(completed / total * 100)
+    overlayFrame.progressBarText:SetText(string.format("%d / %d  (%d%%)", completed, total, pct))
+end
 
 -- ============================================================================
 -- Populate a single row with match data
@@ -687,6 +749,15 @@ function NXR.RefreshOverlay()
     end
 
     local classMode = IsClassChallenge(challenge)
+
+    local barOffset = 0
+    if NelxRatedDB.settings.showOverlayProgressBar then
+        local _, total = CalcChallengeProgress(challenge)
+        if total > 0 then
+            barOffset = BAR_HEIGHT + BAR_PADDING
+        end
+    end
+
     NXR.Debug("RefreshOverlay: challenge='" .. challenge.name .. "'",
         "goal=" .. tostring(challenge.goalRating),
         "classMode=" .. tostring(classMode),
@@ -841,7 +912,7 @@ function NXR.RefreshOverlay()
 
             -- Header on first column of group
             gd.header:ClearAllPoints()
-            gd.header:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", colOffset * colWidth + 4, -PADDING + 2)
+            gd.header:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", colOffset * colWidth + 4, -PADDING - barOffset + 2)
             gd.header:Show()
 
             -- Offset rows below header
@@ -853,7 +924,7 @@ function NXR.RefreshOverlay()
                 local localRow = entryIdx % rowsPerGCol
 
                 local xOff = (colOffset + localCol) * colWidth
-                local yOff = -PADDING - headerOffset - localRow * ROW_HEIGHT
+                local yOff = -PADDING - barOffset - headerOffset - localRow * ROW_HEIGHT
 
                 row:ClearAllPoints()
                 row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", xOff, yOff)
@@ -872,9 +943,10 @@ function NXR.RefreshOverlay()
             colOffset = colOffset + gCols
         end
 
-        local totalHeight = PADDING * 2 + tallestCol
+        local totalHeight = PADDING * 2 + tallestCol + barOffset
         local totalWidth = colOffset * colWidth
         overlayFrame:SetSize(totalWidth, totalHeight)
+        RefreshProgressBar(totalWidth - PADDING * 2)
     else
         -- ============================================================
         -- FLAT LAYOUT: distribute all entries across columns
@@ -899,7 +971,7 @@ function NXR.RefreshOverlay()
             local rowInCol = itemIdx % rowsPerCol
 
             local xOff = colIdx * colWidth
-            local yOff = -PADDING - rowInCol * ROW_HEIGHT
+            local yOff = -PADDING - barOffset - rowInCol * ROW_HEIGHT
 
             row:ClearAllPoints()
             row:SetPoint("TOPLEFT", overlayFrame, "TOPLEFT", xOff, yOff)
@@ -907,9 +979,10 @@ function NXR.RefreshOverlay()
             row:Show()
         end
 
-        local totalHeight = PADDING * 2 + rowsPerCol * ROW_HEIGHT
+        local totalHeight = PADDING * 2 + rowsPerCol * ROW_HEIGHT + barOffset
         local totalWidth = effectiveCols * colWidth
         overlayFrame:SetSize(totalWidth, totalHeight)
+        RefreshProgressBar(totalWidth - PADDING * 2)
     end
 
     -- Re-apply opacity and mouse state
@@ -969,6 +1042,31 @@ local function CreateOverlayFrame()
 
     -- Apply backdrop
     ApplyBackground()
+
+    -- Progress bar sub-frames (Story: overlay progress bar)
+    local pb = CreateFrame("Frame", nil, overlayFrame)
+    pb:SetHeight(BAR_HEIGHT)
+    pb:Hide()
+    overlayFrame.progressBar = pb
+
+    local pbBg = pb:CreateTexture(nil, "BACKGROUND")
+    pbBg:SetAllPoints()
+    pbBg:SetColorTexture(0.10, 0.04, 0.04, 1)
+
+    local pbFill = pb:CreateTexture(nil, "BORDER")
+    pbFill:SetPoint("TOPLEFT")
+    pbFill:SetPoint("BOTTOMLEFT")
+    pbFill:SetWidth(1)
+    local cb = NXR.COLORS.CRIMSON_BRIGHT
+    pbFill:SetColorTexture(cb[1], cb[2], cb[3], 1)
+    overlayFrame.progressBarFill = pbFill
+
+    local pbText = pb:CreateFontString(nil, "OVERLAY", "GameFontNormalTiny")
+    pbText:SetAllPoints()
+    pbText:SetJustifyH("CENTER")
+    pbText:SetJustifyV("MIDDLE")
+    pbText:SetTextColor(1, 1, 1)
+    overlayFrame.progressBarText = pbText
 
     -- Apply scale
     ApplyScale()

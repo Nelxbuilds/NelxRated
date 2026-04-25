@@ -64,9 +64,10 @@ local SETTINGS_DEFAULTS = {
     overlayLocked         = false,
     overlayScale          = 1.0,
     overlayColumns        = 1,
-    overlayGroupByRole    = false,
-    hideZeroRatingRows    = false,
-    chartColor            = "default",
+    overlayGroupByRole       = false,
+    hideZeroRatingRows       = false,
+    showOverlayProgressBar   = false,
+    chartColor               = "default",
 }
 
 local CURRENT_SCHEMA = 1
