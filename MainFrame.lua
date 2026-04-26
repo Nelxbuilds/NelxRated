@@ -71,7 +71,7 @@ local navButtons = {}
 local tabPanels  = {}
 local activeTab  = nil
 
-local TAB_ORDER = { "Home", "History", "Challenges", "Characters", "Settings" }
+local TAB_ORDER = { "Home", "History", "Challenges", "Characters", "Currency", "Settings" }
 
 local function SelectTab(tabName)
     if activeTab == tabName then return end
@@ -221,6 +221,9 @@ local function CreateMainFrame()
     if NXR.CreateCharactersPanel then
         NXR.CreateCharactersPanel(tabPanels["Characters"])
     end
+    if NXR.CreateCurrencyPanel then
+        NXR.CreateCurrencyPanel(tabPanels["Currency"])
+    end
     if NXR.CreateSettingsPanel then
         NXR.CreateSettingsPanel(tabPanels["Settings"])
     end
@@ -232,6 +235,15 @@ local function CreateMainFrame()
 
     mainFrame = f
     NXR.mainFrame = f
+end
+
+function NXR.SelectTab(tabName)
+    if not mainFrame then
+        CreateMainFrame()
+    elseif not mainFrame:IsShown() then
+        mainFrame:Show()
+    end
+    SelectTab(tabName)
 end
 
 function NXR.ToggleMainFrame()

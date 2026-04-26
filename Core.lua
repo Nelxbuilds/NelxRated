@@ -69,6 +69,9 @@ local SETTINGS_DEFAULTS = {
     showOverlayProgressBar   = false,
     showOverlayTitle         = false,
     chartColor               = "default",
+    showMinimapButton        = true,
+    disableTooltip           = false,
+    minimapPosition          = {},
 }
 
 local CURRENT_SCHEMA = 1

@@ -8,15 +8,23 @@
 ## X-Curse-Project-ID: 1510660
 ## SavedVariables: NelxRatedDB
 
+libs\LibStub\LibStub.lua
+libs\CallbackHandler-1.0\CallbackHandler-1.0.lua
+libs\LibDataBroker-1.1\LibDataBroker-1.1.lua
+libs\LibDBIcon-1.0\LibDBIcon-1.0.lua
 Core.lua
+Currency.lua
 Challenges.lua
 Overlay.lua
 ChallengesUI.lua
 CharactersUI.lua
+CurrencyUI.lua
 SettingsUI.lua
 ImportExportUI.lua
 Sync.lua
+Tooltip.lua
 HomeUI.lua
 HistoryUI.lua
 WoWOptionsPanel.lua
 MainFrame.lua
+MinimapButton.lua

@@ -10,6 +10,8 @@ local arenaSlider, arenaValueText
 local outArenaSlider, outArenaValueText
 local scaleSlider, scaleValueText
 local columnsSlider, columnsValueText
+local showMinimapCheckbox
+local disableTooltipCheckbox
 local groupByRoleCheckbox
 local hideZeroCheckbox
 local progressBarCheckbox
@@ -395,6 +397,37 @@ local function BuildGeneralContent(parent)
     syncStatusText:SetText("")
     syncStatusText:SetTextColor(0.78, 0.75, 0.73)
     NXR._syncStatusText = syncStatusText
+    y = y + 28
+
+    -- Divider
+    local divider2 = f:CreateTexture(nil, "ARTWORK")
+    divider2:SetHeight(1)
+    divider2:SetPoint("TOPLEFT", f, "TOPLEFT", 8, -y)
+    divider2:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -y)
+    divider2:SetColorTexture(unpack(NXR.COLORS.CRIMSON_DIM))
+    y = y + 14
+
+    local currencyHeader = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    currencyHeader:SetPoint("TOPLEFT", 8, -y)
+    currencyHeader:SetText("Currency")
+    currencyHeader:SetTextColor(0.96, 0.92, 0.90)
+    y = y + 28
+
+    showMinimapCheckbox = CreateCheckRow(f, "Show minimap button", y,
+        "showMinimapButton", function(checked)
+            local LDBIcon = LibStub and LibStub:GetLibrary("LibDBIcon-1.0", true)
+            if LDBIcon then
+                if checked then
+                    LDBIcon:Show("NelxRated")
+                else
+                    LDBIcon:Hide("NelxRated")
+                end
+            end
+        end)
+    y = y + 34
+
+    disableTooltipCheckbox = CreateCheckRow(f, "Disable currency tooltip", y,
+        "disableTooltip", nil)
 
     return f
 end
@@ -468,6 +501,8 @@ function NXR.CreateSettingsPanel(parent)
         tabContent[3].UpdateChartColorLabel()
         -- General tab state
         accountInput:SetText(NelxRatedDB.settings.accountName or "")
+        showMinimapCheckbox:SetChecked(NelxRatedDB.settings.showMinimapButton ~= false)
+        disableTooltipCheckbox:SetChecked(NelxRatedDB.settings.disableTooltip or false)
     end)
 
     return panel
