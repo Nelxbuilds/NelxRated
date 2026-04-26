@@ -2,6 +2,8 @@
 
 Research codebase before editing. Never change code you haven't read.
 
+Before using any WoW API not already documented in this file, invoke `/wow-api-research` to verify it exists, its signature, and whether it's deprecated.
+
 ## Project
 
 **Name**: NelxRated
