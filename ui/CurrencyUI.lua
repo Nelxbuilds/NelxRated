@@ -5,8 +5,9 @@ local ROW_GAP    = 2
 local HEADER_H   = 24
 local HBAR_H     = 14
 
-local COL_CHAR_W = 160
-local COL_VAL_W  = 80
+local COL_CHAR_W     = 160
+local COL_CURRENCY_W = 80
+local COL_ITEM_W     = 120
 
 local sortKey      = "char"
 local sortAsc      = true
@@ -31,7 +32,9 @@ for _, item in ipairs(NXR.TRACKED_ITEMS) do
 end
 
 local function GetColWidth(col)
-    return col.key == "char" and COL_CHAR_W or COL_VAL_W
+    if col.key == "char" then return COL_CHAR_W end
+    if col.itemId then return COL_ITEM_W end
+    return COL_CURRENCY_W
 end
 
 local function GetVisibleColumns()
