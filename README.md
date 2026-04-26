@@ -54,7 +54,7 @@ Download from [CurseForge](https://www.curseforge.com/wow/addons/nelxrated) and 
 
 ## Built With
 
-This addon is being developed with the assistance of [Claude Code](https://claude.ai/code) by Anthropic — from architecture and implementation to release automation.
+Built through AI-assisted development: Nelx designed the features and directed the work; [Claude Code](https://claude.ai/code) (Anthropic) implemented the code, architecture, and release automation.
 
 ## License
 

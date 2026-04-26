@@ -38,17 +38,14 @@ UI files under `UI/`. Logic/data files at root or named modules.
 | Blitz Battleground | 4 | `NXR.BRACKET_BLITZ` |
 | Solo Shuffle | 7 | `NXR.BRACKET_SOLO_SHUFFLE` |
 
-**Important**: Blitz BG index (4) verify in-game. Use `/dump C_PvP.GetRatedBracketInfo(4)` to confirm.
 
 ## Key Design Constraints
 
 - **Multi-account support**: SavedVariables per-account. Import/Export bridges gap — imports must merge, never replace, receiving account's data.
 - **Overlay opacity**: opacity=0 → tooltips disabled entirely.
-- **Color thresholds**: >= 80% of goal → orange, >= 90% → yellow, >= 100% → checkmark icon (not Unicode).
 - **Best character selection**: Per spec row in overlay, show only highest-rated character across challenge's selected brackets.
 - **Active challenge**: Only one active at a time. Overlay shows specs from active challenge.
 - **Challenge flexibility**: Multi-spec (individual specs), class challenges (all specs of class count), multi-bracket (rating in any selected bracket counts).
-- **PvP crimson theme**: UI uses crimson accent colors (`CRIMSON_BRIGHT`/`MID`/`DIM`) for borders and active states. Gold only for section title text.
 
 ## Icon Atlas Notes
 
@@ -82,7 +79,7 @@ Each epic: stories with acceptance criteria checkboxes.
 Completed: `- [x]`. Incomplete: `- [ ]`.
 Release checklist: `docs/curseforge-release-checklist.md`
 
-Bugs tracked as unchecked criteria in epic story docs. No separate bug file. No GitHub issues for dev-found bugs.
+Bugs tracked in `docs/bugs.md`. One entry per bug: description, file/line, repro steps if needed. Not in epic story docs. Not in GitHub issues.
 
 ## Lint Rules
 
@@ -176,28 +173,14 @@ Manual steps before any release:
 
 ## README
 
-Sections to update (from completed stories):
-- Intro paragraph
-- Features list
-- Main Frame Tabs table
-- Usage (slash commands)
-
-Sections to leave alone:
-- Installation
-- Requirements
-- Built With
-- License
-
-Feature order: tracking → challenges → overlay → history → multi-char → multi-account → customization
+Managed by `/update-readme` (runs inside `/ship`). Don't edit manually.
 
 ## Skills & Automation
 
 Agents and skills from **nelx-claude** marketplace (`Nelxbuilds/nelx-claude`).
 
-Install marketplace: `claude plugin marketplace add Nelxbuilds/nelx-claude`
-
 Available plugins (agents): `implement-story`, `lua-linter`, `release-prep`, `review-addon`, `write-story`
-Available plugins (skills): `ship`, `update-readme`, `wow-api-research`, `wow-ui-designer`
+Available plugins (skills): `ship`, `update-readme`, `wow-api-research`, `wow-ui-designer`, `bug`
 
 Key skill notes:
 - `/update-readme` — syncs README.md from epic docs; runs automatically inside `/ship`
@@ -208,9 +191,9 @@ Key skill notes:
 ## Working Style
 
 - Bug fixes: read bug, read relevant code, fix it. No agents or linters unless asked.
-- Agents (implement-story, lua-linter, etc.) only when explicitly asked or for multi-file tasks.
+- Agents (implement-story, lua-linter, etc.) only when explicitly asked.
 - Don't re-read files already in context.
-- Keep responses short. No summaries — diff speaks for itself.
+- Keep responses short. No summaries — diff speaks for itself. Don't narrate changes after making them.
 
 ## SavedVariables
 
@@ -221,5 +204,5 @@ NelxRatedDB.settings        -- User preferences (opacity, overlay lock, account 
 NelxRatedDB.characters      -- Tracked character rating data
 NelxRatedDB.challenges      -- Challenge definitions
 NelxRatedDB.overlayPosition -- Saved overlay frame position
-NelxRatedDB.schemaVersion   -- DB migration version (currently 1)
+NelxRatedDB.schemaVersion   -- DB migration version
 ```
