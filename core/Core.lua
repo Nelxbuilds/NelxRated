@@ -74,10 +74,12 @@ local SETTINGS_DEFAULTS = {
     minimapPosition          = {},
 }
 
-local CURRENT_SCHEMA = 1
+local CURRENT_SCHEMA = 2
 
 local MIGRATIONS = {
-    -- [2] = function(db) ... end,  -- add future migrations here
+    [2] = function(db)
+        db.matches = db.matches or {}
+    end,
 }
 
 local function RunMigrations(db)
@@ -100,6 +102,7 @@ local function InitDB()
     NelxRatedDB.schemaVersion         = NelxRatedDB.schemaVersion or 0
     NelxRatedDB.deletedChallengeUIDs  = NelxRatedDB.deletedChallengeUIDs or {}
     NelxRatedDB.syncPartners          = NelxRatedDB.syncPartners or {}
+    NelxRatedDB.matches               = NelxRatedDB.matches or {}
 
     RunMigrations(NelxRatedDB)
     NXR.Debug("InitDB complete — schema", NelxRatedDB.schemaVersion,
