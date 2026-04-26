@@ -98,10 +98,11 @@ end
 -- Tab system
 -- ============================================================================
 
-local TAB_NAMES  = { "General", "Overlay", "History", "Import/Export" }
-local tabButtons = {}
-local tabContent = {}
-local activeTab  = 1
+local TAB_NAMES  = { "General", "Overlay", "History", "Currency", "Import/Export" }
+local tabButtons        = {}
+local tabContent        = {}
+local activeTab         = 1
+local currencyCheckboxes = {}
 
 local function SelectTab(idx)
     activeTab = idx
@@ -432,6 +433,97 @@ local function BuildGeneralContent(parent)
     return f
 end
 
+local function BuildCurrencySettingsContent(parent)
+    local f = CreateFrame("Frame", nil, parent)
+    f:SetPoint("TOPLEFT", 0, 0)
+    f:SetPoint("BOTTOMRIGHT", 0, 0)
+
+    local y = 8
+
+    local function SectionHeader(text)
+        local lbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        lbl:SetPoint("TOPLEFT", 8, -y)
+        lbl:SetText(text)
+        lbl:SetTextColor(0.96, 0.92, 0.90)
+        y = y + 24
+    end
+
+    local function Divider()
+        local div = f:CreateTexture(nil, "ARTWORK")
+        div:SetHeight(1)
+        div:SetPoint("TOPLEFT", f, "TOPLEFT", 8, -y)
+        div:SetPoint("TOPRIGHT", f, "TOPRIGHT", -8, -y)
+        div:SetColorTexture(unpack(NXR.COLORS.CRIMSON_DIM))
+        y = y + 14
+    end
+
+    SectionHeader("Currencies")
+    for _, entry in ipairs(NXR.TRACKED_CURRENCIES) do
+        local cb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+        cb:SetSize(26, 26)
+        cb:SetPoint("TOPLEFT", 8, -y)
+
+        local lbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        lbl:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+        lbl:SetText(entry.name)
+
+        local entryId = entry.id
+        cb:SetScript("OnClick", function(self)
+            NelxRatedDB.settings.hiddenCurrencies = NelxRatedDB.settings.hiddenCurrencies or {}
+            if not self:GetChecked() then
+                NelxRatedDB.settings.hiddenCurrencies[entryId] = true
+            else
+                NelxRatedDB.settings.hiddenCurrencies[entryId] = nil
+            end
+            if NXR.RefreshCurrencyPanel then NXR.RefreshCurrencyPanel() end
+        end)
+
+        table.insert(currencyCheckboxes, { cb = cb, ctype = "currency", id = entryId })
+        y = y + 34
+    end
+
+    Divider()
+    SectionHeader("Items")
+    for _, item in ipairs(NXR.TRACKED_ITEMS) do
+        local cb = CreateFrame("CheckButton", nil, f, "UICheckButtonTemplate")
+        cb:SetSize(26, 26)
+        cb:SetPoint("TOPLEFT", 8, -y)
+
+        local lbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+        lbl:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+        lbl:SetText(item.name)
+
+        local itemId = item.id
+        cb:SetScript("OnClick", function(self)
+            NelxRatedDB.settings.hiddenItems = NelxRatedDB.settings.hiddenItems or {}
+            if not self:GetChecked() then
+                NelxRatedDB.settings.hiddenItems[itemId] = true
+            else
+                NelxRatedDB.settings.hiddenItems[itemId] = nil
+            end
+            if NXR.RefreshCurrencyPanel then NXR.RefreshCurrencyPanel() end
+        end)
+
+        table.insert(currencyCheckboxes, { cb = cb, ctype = "item", id = itemId })
+        y = y + 34
+    end
+
+    f.RefreshChecks = function()
+        local s = NelxRatedDB and NelxRatedDB.settings or {}
+        for _, entry in ipairs(currencyCheckboxes) do
+            local isHidden = false
+            if entry.ctype == "currency" then
+                isHidden = s.hiddenCurrencies and s.hiddenCurrencies[entry.id]
+            else
+                isHidden = s.hiddenItems and s.hiddenItems[entry.id]
+            end
+            entry.cb:SetChecked(not isHidden)
+        end
+    end
+
+    return f
+end
+
 local function BuildImportExportContent(parent)
     local f = CreateFrame("Frame", nil, parent)
     f:SetPoint("TOPLEFT", 0, 0)
@@ -475,7 +567,8 @@ function NXR.CreateSettingsPanel(parent)
     tabContent[1] = BuildGeneralContent(contentFrame)
     tabContent[2] = BuildOverlayContent(contentFrame)
     tabContent[3] = BuildHistoryContent(contentFrame)
-    tabContent[4] = BuildImportExportContent(contentFrame)
+    tabContent[4] = BuildCurrencySettingsContent(contentFrame)
+    tabContent[5] = BuildImportExportContent(contentFrame)
 
     -- Default to General tab
     SelectTab(1)
@@ -499,6 +592,8 @@ function NXR.CreateSettingsPanel(parent)
         end
         -- History tab state
         tabContent[3].UpdateChartColorLabel()
+        -- Currency settings tab state
+        tabContent[4].RefreshChecks()
         -- General tab state
         accountInput:SetText(NelxRatedDB.settings.accountName or "")
         showMinimapCheckbox:SetChecked(NelxRatedDB.settings.showMinimapButton ~= false)

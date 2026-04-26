@@ -72,6 +72,8 @@ local SETTINGS_DEFAULTS = {
     showMinimapButton        = true,
     disableTooltip           = false,
     minimapPosition          = {},
+    hiddenCurrencies         = {},
+    hiddenItems              = {},
 }
 
 local CURRENT_SCHEMA = 1
