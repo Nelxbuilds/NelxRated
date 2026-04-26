@@ -128,7 +128,7 @@ local function Refresh()
             row:SetBackdrop({
                 bgFile   = "Interface\\Buttons\\WHITE8x8",
                 edgeFile = "Interface\\Buttons\\WHITE8x8",
-                edgeSize = 0,
+                edgeSize = 1,
             })
 
             row.cols = {}
@@ -160,6 +160,7 @@ local function Refresh()
         else
             row:SetBackdropColor(0.08, 0.08, 0.08, 0.5)
         end
+        row:SetBackdropBorderColor(0.2, 0.2, 0.2, 0.3)
 
         for ci, col in ipairs(COLUMNS) do
             local fs = row.cols[ci]
@@ -177,7 +178,7 @@ local function Refresh()
                     fs:SetText(tostring(val))
                     fs:SetTextColor(1, 1, 1)
                 else
-                    fs:SetText("\xe2\x80\x94")
+                    fs:SetText("--")
                     fs:SetTextColor(0.4, 0.4, 0.4)
                 end
             end
@@ -207,7 +208,7 @@ function NXR.CreateCurrencyPanel(parent)
 
     emptyLabel = currPanel:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     emptyLabel:SetPoint("CENTER", 0, 0)
-    emptyLabel:SetText("No data \xe2\x80\x94 play a game or reload")
+    emptyLabel:SetText("No data -- play a game or reload")
     emptyLabel:SetTextColor(0.55, 0.55, 0.55)
     emptyLabel:SetJustifyH("CENTER")
     emptyLabel:Hide()
@@ -219,9 +220,10 @@ function NXR.CreateCurrencyPanel(parent)
     headerFrame:SetBackdrop({
         bgFile   = "Interface\\Buttons\\WHITE8x8",
         edgeFile = "Interface\\Buttons\\WHITE8x8",
-        edgeSize = 0,
+        edgeSize = 1,
     })
     headerFrame:SetBackdropColor(0.06, 0.04, 0.04, 0.9)
+    headerFrame:SetBackdropBorderColor(unpack(NXR.COLORS.CRIMSON_DIM))
 
     local xOff = 0
     for _, col in ipairs(COLUMNS) do
